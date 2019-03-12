@@ -1,5 +1,8 @@
 import time
 import api
+import paralleldots
+
+paralleldots.set_api_key("7bb52o7adoBzZjmxaG6Wwgy7wfYvg9txNLnZHKh89E4")
 
 stock_list = [
     "TSLA","AAPL","WMT","JNJ","GOOG","XOM","MSFT","GE","JPM","IBM","AMZN"
@@ -23,16 +26,6 @@ def main():
     
     while True:
 
-        thing = news.get("everything?q=" + name_list[0] + "&from=2019-03-10&to=2019-03-10&sortBy=popularity&apiKey=" + news.key, None, None)
-        for i in thing['articles']:
-            print(i)
-            #print (i['content'])
-            print('')
-            print('')
-        
-        #print(thing['articles'])
-
-        exit()
         current_positions = alpaca.get("positions", None, None)
         current_list = list()
         open_orders = alpaca.get("orders", None, {"status":"open","direction":"desc"})
