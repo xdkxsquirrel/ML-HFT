@@ -1,181 +1,73 @@
-import time
-import requests
-
-alpaca_base_url = "https://paper-api.alpaca.markets/v1/"
-alpaca_headers = {
-    'content-type': "application/json",
-    'apca-api-secret-key': "fRPyMcc4OootRhgez/W0HLPAv1IXbD/E6OaAzJTo",
-    'apca-api-key-id': "PK6WI3ROFW19GXBRAQ4O"
-    }
-account_info = None
 
 
+class MLA():
+    def __init__(self, company_weight, four_weight, profit_weight, twitter_weight, moving_weight):
+        self.company_weight = company_weight
+        self.four_weight = four_weight
+        self.profit_weight = profit_weight
+        self.twitter_weight = twitter_weight
+        self.moving_weight = moving_weight
 
-##########################################################################################
-############                        ALPACA METHODS                     ###################
-def get_account_info():
-    url = alpaca_base_url + "account"
-    payload = ""
-    response = requests.request("GET", url, data=payload, alpaca_headers=alpaca_headers)
-    return response.json()
+        self.company_data = 0
+        self.four_data = 0
+        self.profit_data = 0
+        self.twitter_data = 0
+        self.moving_data = 0
 
+    def company_weight(self):
+        print(self.company_weight)
 
-def list_all_orders():
-    url = alpaca_base_url + "orders"
-    querystring = {"status":"all","direction":"desc"}
-    payload = ""
-    response = requests.request("GET", url, data=payload, alpaca_headers=alpaca_headers, params=querystring)
-    return response.json()
+    def set_company_data(self, company_data):
+        self.company_data = company_data
 
+    def four_candle_hammer(self):
+        print(self.four_weight)
 
-def list_all_open_orders():
-    url = alpaca_base_url + "orders"
-    querystring = {"status":"open","direction":"desc"}
-    payload = ""
-    response = requests.request("GET", url, data=payload, alpaca_headers=alpaca_headers, params=querystring)
-    return response.json()
+    def set_four_candle_hammer(self, four_data):
+        self.four_data = four_data
 
+    def profit_loss(self):
+        print(self.profit_weight)
 
-def place_buy_order(symbol, qty, type, time_in_force):
-    url = alpaca_base_url + "orders"
-    querystring = {"status":"all","direction":"desc"}
-    payload = "{\n\t\"symbol\": \"" + symbol + "\",\n\t\"qty\": " + qty +\
-        ",\n\t\"side\": \"buy\",\n\t\"type\": \"" + type +\
-        "\",\n\t\"time_in_force\": \"" + time_in_force + "\"\n}"
-    response = requests.request("POST", url, data=payload, alpaca_headers=alpaca_headers, params=querystring)
-    return response.json()
+    def set_profit_loss(self, profit_data):
+        self.profit_data = profit_data
 
+    def twitter_feed(self):
+        print(self.twitter_weight)
 
-def place_sell_order(symbol, qty, type, time_in_force):
-    url = alpaca_base_url + "orders"
-    querystring = {"status":"all","direction":"desc"}
-    payload = "{\n\t\"symbol\": \"" + symbol + "\",\n\t\"qty\": " + qty +\
-        ",\n\t\"side\": \"sell\",\n\t\"type\": \"" + type +\
-        "\",\n\t\"time_in_force\": \"" + time_in_force + "\"\n}"
-    response = requests.request("POST", url, data=payload, alpaca_headers=alpaca_headers, params=querystring)
-    return response.json()
-
-
-def get_an_order():
-    return 'Get an Order'
-
-
-def cancel_an_order():
-    return 'Cancel an Order'
-
-
-
-def get_all_open_positions():
-    url = alpaca_base_url + "positions"
-    payload = ""
-    response = requests.request("GET", url, data=payload, alpaca_headers=alpaca_headers)
-    current_positions = response.json()
-    # 200 print (response.status_code)
-    # Json print (response.alpaca_headers['content-type'])
-    return current_positions
-
-
-def get_an_open_position(symbol):
-    url = alpaca_base_url + "positions/" + symbol
-    payload = ""
-    response = requests.request("GET", url, data=payload, alpaca_headers=alpaca_headers)
-    return response.json()
-
-
-
-def get_all_assets():
-    print('All Assets')
-
-
-def get_an_asset():
-    print('Asset')
-
+    def set_twitter_feed(self, twitter_data):
+        self.twitter_data = twitter_data
     
-def get_the_calendar():
-    print('Calendar')
+    def 200_moving_average(self):
+        print(self.moving_weight)
 
+    def set_200_moving_average(self, moving_data):
+        self.moving_data = moving_data
 
-def get_the_clock():
-    url = alpaca_base_url + "clock"
-    payload = ""
-    response = requests.request("GET", url, data=payload, alpaca_headers=alpaca_headers)
-    return response.json()
-
-   
-def get_one_day_bar(symbol):
-    url = "https://data.alpaca.markets/v1/bars/1D"
-    querystring = {"symbols":symbol,"limit":"1","start":"","end":"","after":"","until":""}
-    payload = ""
-    response = requests.request("GET", url, data=payload, alpaca_headers=alpaca_headers, params=querystring)
-    return response.json()
-
-
-def get_fifteen_minute_bar(symbol):
-    url = "https://data.alpaca.markets/v1/bars/15Min"
-    querystring = {"symbols":symbol,"limit":"1","start":"","end":"","after":"","until":""}
-    payload = ""
-    response = requests.request("GET", url, data=payload, alpaca_headers=alpaca_headers, params=querystring)
-    return response.json()
-
-
-##########################################################################################
-############                        TRADE ALGORITHMS                   ################### 
-def trade_currently_held_stocks(symbol):
-    open_position = (get_an_open_position(symbol))
-    one_day_bar = get_one_day_bar(symbol)
-
-    if float(open_position['market_value']) < (float(account_info['portfolio_value'])/40) :
-        if (float(one_day_bar[symbol][0]['l']) - float(open_position['current_price'])) < (float(one_day_bar[symbol][0]['l'])/50) :
-            if float(open_position['current_price']) < (float(account_info['buying_power']) + 10) :
-                print(f'BUY ONE {symbol}')
-                place_buy_order(symbol, "1", "market", "gtc")
-    else :
-        if (float(open_position['current_price']) - float(open_position['avg_entry_price'])) > (float(open_position['current_price'])/100) :
-            print(f'SELL ALL {symbol}')
-            place_sell_order(symbol, open_position['qty'], "market", "gtc")
-        else : 
-            print(f'STAY ALL {symbol}')
-
-
-def buy_new_stock(symbol):
-    one_day_bar = get_one_day_bar(symbol)
-    if (float(one_day_bar[symbol][0]['c']) - float(one_day_bar[symbol][0]['l'])) < (float(one_day_bar[symbol][0]['l'])/100) :
-        if float(one_day_bar[symbol][0]['c']) < (float(account_info['buying_power']) + 10) :
-            print(f'BUYING {symbol} from stock list')
-            place_buy_order(symbol, "1", "market", "gtc")
-
-
-##########################################################################################
-############                        MAIN METHOD                        ################### 
-def main():
-    global account_info
-    while True:
-        current_positions = get_all_open_positions()
-        current_list = list()
-        open_orders = list_all_open_orders()
-        for i in range(len(current_positions)):
-            current_list.insert(i, current_positions[i]['symbol']) 
-        clock = get_the_clock()
-        account_info = get_account_info()
-        if clock['is_open']:
-            
-            if len(open_orders) == 0 :
-                for i in current_positions:
-                    trade_currently_held_stocks(i['symbol'])
-                    time.sleep(10)
-
-                for i in stock_list :
-                    if i not in current_list :
-                        buy_new_stock(i)
-                        time.sleep(10)
-
-
-            else :
-                print(f'{len(open_orders)} orders pending.')
-                time.sleep(30)
-
+    def make_trade(self):
+        if(self.company_data > 50):
+            print("Company Data Bullish")
         else:
-            print('Markets are closed')
-            time.sleep(60)
+            print("Comapny Data Bearish")
+        
+        if(self.four_data > 50):
+            print("Four Candle Hammer Bullish")
+        else:
+            print("Four Candle Hammer Bearish")
 
-main()
+        if(self.profit_data > 50):
+            print("Profit and Loss Statement Bullish")
+        else: 
+            print("Profit and Loss Statement Bearish")
+
+        if(self.twitter_data > 50):
+            print("Twitter Bullish")
+        else:
+            print("Twitter Bearish")
+
+        if(self.moving_data > 50):
+            print("200 Moving Day Average Bullish")
+        else:
+            print("200 Moving Day Average Bearish")
+
+        
