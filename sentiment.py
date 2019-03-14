@@ -1,4 +1,3 @@
-import api
 import indicoio
 import datetime
 import numpy as np
