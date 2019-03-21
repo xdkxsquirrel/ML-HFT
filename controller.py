@@ -154,30 +154,4 @@ def main():
             print('Markets are closed')
             time.sleep(60)
 
-
-def other():
-    alpaca = Api("https://paper-api.alpaca.markets/v1/", {
-    'content-type': "application/json",
-    'apca-api-secret-key': "fRPyMcc4OootRhgez/W0HLPAv1IXbD/E6OaAzJTo",
-    'apca-api-key-id': "PK6WI3ROFW19GXBRAQ4O"
-    }, "fRPyMcc4OootRhgez/W0HLPAv1IXbD/E6OaAzJTo")
-
-    Tesla = Stock("TSLA", "Telsa", 0, 0)
-
-    while(1):
-        clock = alpaca.get("clock", None, None)
-        if clock['is_open']:
-            
-            if(get_current_price(Tesla) > 283):
-                sell(alpaca, "TSLA")
-                print('Sold Tesla')
-                exit()
-            else:
-                print(Tesla.price)
-            time.sleep(60)
-
-        else:
-            print('Markets are closed')
-            time.sleep(60)
-
 main()
