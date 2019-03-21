@@ -17,29 +17,12 @@ class MLA():
         self.moving_data = 0
 
     def decide_trade(self):
-        if(self.company_data > 50):
-            print("Company Data Bullish")
+        if(self.company_data * self.company_weight) > 1:
+            return 1
         else:
-            print("Comapny Data Bearish")
-        
-        if(self.four_data > 50):
-            print("Four Candle Hammer Bullish")
-        else:
-            print("Four Candle Hammer Bearish")
+            return 0
 
-        if(self.profit_data > 50):
-            print("Profit and Loss Statement Bullish")
-        else: 
-            print("Profit and Loss Statement Bearish")
-
-        if(self.twitter_data > 50):
-            print("Twitter Bullish")
-        else:
-            print("Twitter Bearish")
-
-        if(self.moving_data > 50):
-            print("200 Moving Day Average Bullish")
-        else:
-            print("200 Moving Day Average Bearish")
+    def learn(self):
+        pass
 
         

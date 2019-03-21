@@ -97,7 +97,7 @@ def init_stocks():
 
 
 def buy(alpaca, symbol):
-    qty = "1"
+    qty = "300"
     kind = "market"
     time_in_force = "gtc"
     payload = "{\n\t\"symbol\": \"" + symbol + "\",\n\t\"qty\": " + qty +\
@@ -105,6 +105,22 @@ def buy(alpaca, symbol):
             "\",\n\t\"time_in_force\": \"" + time_in_force + "\"\n}"
     querystring = {"status":"all","direction":"desc"}
     return alpaca.post("orders", payload, querystring)
+
+def sell(alpaca, symbol):
+    qty = "299"
+    kind = "market"
+    time_in_force = "gtc"
+    payload = "{\n\t\"symbol\": \"" + symbol + "\",\n\t\"qty\": " + qty +\
+            ",\n\t\"side\": \"sell\",\n\t\"type\": \"" + kind +\
+            "\",\n\t\"time_in_force\": \"" + time_in_force + "\"\n}"
+    querystring = {"status":"all","direction":"desc"}
+    return alpaca.post("orders", payload, querystring)
+
+def get_current_price(stock):
+    IEX = Api("https://cloud.iexapis.com/beta/", None, "pk_11551eefe1bf4f0b81121b498c6a7651")
+    response = IEX.get("stock/" + stock.symbol + "/quote?token=" + IEX.key, None, None)
+    stock.price = float(response['latestPrice'])
+    return stock.price
 
 def perform_trades():
     pass
@@ -116,17 +132,49 @@ def main():
     'apca-api-key-id': "PK6WI3ROFW19GXBRAQ4O"
     }, "fRPyMcc4OootRhgez/W0HLPAv1IXbD/E6OaAzJTo")
 
+    
     stock_list = init_stocks()
     for stock in stock_list:
-        stock.set_news_sentiment(3)
+        stock.set_news_sentiment(10)
 
     while True:
         clock = alpaca.get("clock", None, None)
         if clock['is_open']:
             
             for stock in stock_list:
+                print(f'Current Price of ' + stock.name + ' is ' + str(stock.price) + ' with 52 week low of ' + str(stock.week52Low) + ' and sentiment of ' + str(stock.news_sentiment))
+                print(f'Sentiment is ' + stock.news_sentiment)
                 if((stock.news_sentiment > .6) & ((stock.price - stock.week52Low) < (stock.price / 10))):
-                    buy(alpaca, stock.symbol)
+                    #buy(alpaca, stock.symbol)
+                    print(f'Bought ' + stock.name + ' for ' + str(stock.price))
+                print('')
+            time.sleep(60)
+
+        else:
+            print('Markets are closed')
+            time.sleep(60)
+
+
+def other():
+    alpaca = Api("https://paper-api.alpaca.markets/v1/", {
+    'content-type': "application/json",
+    'apca-api-secret-key': "fRPyMcc4OootRhgez/W0HLPAv1IXbD/E6OaAzJTo",
+    'apca-api-key-id': "PK6WI3ROFW19GXBRAQ4O"
+    }, "fRPyMcc4OootRhgez/W0HLPAv1IXbD/E6OaAzJTo")
+
+    Tesla = Stock("TSLA", "Telsa", 0, 0)
+
+    while(1):
+        clock = alpaca.get("clock", None, None)
+        if clock['is_open']:
+            
+            if(get_current_price(Tesla) > 283):
+                sell(alpaca, "TSLA")
+                print('Sold Tesla')
+                exit()
+            else:
+                print(Tesla.price)
+            time.sleep(60)
 
         else:
             print('Markets are closed')
