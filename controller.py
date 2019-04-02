@@ -25,8 +25,9 @@ class Api():
 
 
 class Stock():
-    def __init__(self, symbol, name, price, week52Low):
+    def __init__(self, symbol, name, price, week52Low, backend):
         self.symbol = symbol
+        self.backend = backend
         self.name = name
         self.price = price
         self.week52Low = week52Low
@@ -72,27 +73,27 @@ class Stock():
 def init_stocks():
     IEX = Api("https://cloud.iexapis.com/beta/", None, "pk_11551eefe1bf4f0b81121b498c6a7651") #secret = sk_8df6ccfac04742f194e71f6140cf6944
     response = IEX.get("stock/TSLA/quote?token=" + IEX.key, None, None)
-    Tesla = Stock("TSLA", "Telsa", float(response['latestPrice']), float(response['week52Low']))
+    Tesla = Stock("TSLA", "Telsa", float(response['latestPrice']), float(response['week52Low']), backend.MLA(20, 20, 20, 20, 20))
     response = IEX.get("stock/AAPL/quote?token=" + IEX.key, None, None)
-    Apple = Stock("AAPL", "Apple", float(response['latestPrice']), float(response['week52Low']))
+    Apple = Stock("AAPL", "Apple", float(response['latestPrice']), float(response['week52Low']), backend.MLA(20, 20, 20, 20, 20))
     response = IEX.get("stock/WMT/quote?token=" + IEX.key, None, None)
-    Walmart = Stock("WMT", "Walmart", float(response['latestPrice']), float(response['week52Low']))
+    Walmart = Stock("WMT", "Walmart", float(response['latestPrice']), float(response['week52Low']), backend.MLA(20, 20, 20, 20, 20))
     response = IEX.get("stock/JNJ/quote?token=" + IEX.key, None, None)
-    JNJ = Stock("JNJ", "Johnson & Johnson", float(response['latestPrice']), float(response['week52Low']))
+    JNJ = Stock("JNJ", "Johnson & Johnson", float(response['latestPrice']), float(response['week52Low']), backend.MLA(20, 20, 20, 20, 20))
     response = IEX.get("stock/GOOG/quote?token=" + IEX.key, None, None)
-    Google = Stock("GOOG", "Google", float(response['latestPrice']), float(response['week52Low']))
+    Google = Stock("GOOG", "Google", float(response['latestPrice']), float(response['week52Low']), backend.MLA(20, 20, 20, 20, 20))
     response = IEX.get("stock/XOM/quote?token=" + IEX.key, None, None)
-    Exxon = Stock("XOM", "Exxon", float(response['latestPrice']), float(response['week52Low']))
+    Exxon = Stock("XOM", "Exxon", float(response['latestPrice']), float(response['week52Low']), backend.MLA(20, 20, 20, 20, 20))
     response = IEX.get("stock/MSFT/quote?token=" + IEX.key, None, None)
-    Microsoft = Stock("MSFT", "Microsoft", float(response['latestPrice']), float(response['week52Low']))
+    Microsoft = Stock("MSFT", "Microsoft", float(response['latestPrice']), float(response['week52Low']), backend.MLA(20, 20, 20, 20, 20))
     response = IEX.get("stock/GE/quote?token=" + IEX.key, None, None)
-    GE = Stock("GE", "General Electric", float(response['latestPrice']), float(response['week52Low']))
+    GE = Stock("GE", "General Electric", float(response['latestPrice']), float(response['week52Low']), backend.MLA(20, 20, 20, 20, 20))
     response = IEX.get("stock/JPM/quote?token=" + IEX.key, None, None)
-    JPMorgan = Stock("JPM", "JPMorgan Chase", float(response['latestPrice']), float(response['week52Low']))
+    JPMorgan = Stock("JPM", "JPMorgan Chase", float(response['latestPrice']), float(response['week52Low']), backend.MLA(20, 20, 20, 20, 20))
     response = IEX.get("stock/IBM/quote?token=" + IEX.key, None, None)
-    IBM = Stock("IBM", "IBM", float(response['latestPrice']), float(response['week52Low']))
+    IBM = Stock("IBM", "IBM", float(response['latestPrice']), float(response['week52Low']), backend.MLA(20, 20, 20, 20, 20))
     response = IEX.get("stock/AMZN/quote?token=" + IEX.key, None, None)
-    Amazon = Stock("AMZN", "Amazon", float(response['latestPrice']), float(response['week52Low']))
+    Amazon = Stock("AMZN", "Amazon", float(response['latestPrice']), float(response['week52Low']), backend.MLA(20, 20, 20, 20, 20))
     return [Tesla, Apple, Walmart, JNJ, Google, Exxon, Microsoft, GE, JPMorgan, IBM, Amazon]
 
 
@@ -143,15 +144,19 @@ def main():
             
             for stock in stock_list:
                 print(f'Current Price of ' + stock.name + ' is ' + str(stock.price) + ' with 52 week low of ' + str(stock.week52Low) + ' and sentiment of ' + str(stock.news_sentiment))
-                print(f'Sentiment is ' + stock.news_sentiment)
-                if((stock.news_sentiment > .6) & ((stock.price - stock.week52Low) < (stock.price / 10))):
-                    #buy(alpaca, stock.symbol)
-                    print(f'Bought ' + stock.name + ' for ' + str(stock.price))
+                print(f'Sentiment is ' + str(stock.news_sentiment))
+                if stock.news_sentiment > .5:
+                    stock.backend.company_data = 1
+                else:
+                    stock.backend.company_data = 0
+                buy, number_to_buy = stock.backend.decide_trade()
+                print(f'Buy: ' + str(buy) + ' # to Buy: ' + str(number_to_buy))
                 print('')
             time.sleep(60)
 
         else:
             print('Markets are closed')
             time.sleep(60)
+
 
 main()
