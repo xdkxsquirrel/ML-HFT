@@ -8,6 +8,8 @@ class MLA():
         self.twitter_weight = twitter_weight
         self.moving_weight = moving_weight
 
+        self.trades_history = list()
+
         self.company_data = 0
         self.four_data = 0
         self.profit_data = 0
@@ -15,20 +17,10 @@ class MLA():
         self.moving_data = 0
 
     def decide_trade(self):
-        number_to_buy = buy = 0
-        buy = self.company_weight * self.company_data + self.four_weight * self.four_data + self.moving_weight * self.moving_data + self.profit_weight * self.profit_data + self.twitter_weight * self.twitter_data 
-        if buy < 40:
-            number_to_buy = 0
-            return "40", number_to_buy
-        elif buy < 60:
-            number_to_buy = 0
-            return "sell", number_to_buy
-        elif buy < 80:
-            number_to_buy = 1
-            return "sell", number_to_buy
+        if(self.company_data * self.company_weight) > 1:
+            return 1
         else:
-            number_to_buy = 5
-            return "sell", number_to_buy
+            return 0
 
     def learn(self):
         pass
