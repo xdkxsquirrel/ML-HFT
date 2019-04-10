@@ -152,14 +152,14 @@ class Stock():
         # negative tweets
         ntweets = [tweet for tweet in tweets if tweet['sentiment'] == 'negative']
         negative = 100 * len(ptweets) / len(tweets)
-
+        
         # neutral tweets
-        neutral = 100 * (len(tweets) - len(ntweets) - len(ptweets)) / len(tweets);
+        neutral = 100 * (len(tweets) - len(ntweets) - len(ptweets)) / len(tweets)
 
         if (positive + neutral >= 80):
-            print("1")
+            self.twitter_sentiment = 1
         else:
-            print("0")
+            self.twitter_sentiment = 0
 
     def set_moving_avg(self):
         pass
