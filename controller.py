@@ -136,9 +136,15 @@ class Stock():
     # not profit or loss for now, but seeing if revenue is increasing
     # which is a sign of a stable company
     def set_profit_loss(self):
-        URLPE = "https://api.iextrading.com/1.0/stock/" + self.symbol + "/financials"
-        rPE = requests.get(url = URLPE)
-        data = rPE.json()
+        try:
+            URLPE = "https://api.iextrading.com/1.0/stock/" + self.symbol + "/financials"
+            rPE = requests.get(url = URLPE)
+            data = rPE.json()
+        except:
+            print("IEX is down right now")
+            self.profit_loss = 0
+            return
+
         if "financials" not in data:
             print(f'Stock ' + self.symbol + ' does not have Financials')
             self.profit_loss = 0
