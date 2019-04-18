@@ -108,6 +108,7 @@ class Stock():
         self.twitter_sentiment = 0
         self.moving_avg = 0
         self.MLA = backend.MLA(25, 0, 25, 25, 25)
+        self.sell = 0
 
     def set_news_sentiment(self, number_of_articles):
         indicoio.config.api_key = 'df08c40de1d01d2b3c8c3fc75f21ab81'
@@ -208,6 +209,7 @@ class Stock():
             threeDayOldPrice = float(data["Time Series (Daily)"][dates[2]]["4. close"])
             if(currnetPrice < threeDayOldPrice):
                 #sell it
+                self.sell = 1
                 self.moving_avg = 0
             else:
                 self.moving_avg = 0
@@ -261,8 +263,7 @@ def init_stocks():
     Amazon = Stock("AMZN", "Amazon", 1337.0, 1337.0)
     return [Tesla, Apple, Walmart, JNJ, Google, Exxon, Microsoft, GE, JPMorgan, IBM, Amazon]
 
-def buy(alpaca, symbol):
-    qty = "300"
+def buy(alpaca, symbol, qty):
     kind = "market"
     time_in_force = "gtc"
     payload = "{\n\t\"symbol\": \"" + symbol + "\",\n\t\"qty\": " + qty +\
@@ -271,8 +272,7 @@ def buy(alpaca, symbol):
     querystring = {"status":"all","direction":"desc"}
     return alpaca.post("orders", payload, querystring)
 
-def sell(alpaca, symbol):
-    qty = "299"
+def sell(alpaca, symbol, qty):
     kind = "market"
     time_in_force = "gtc"
     payload = "{\n\t\"symbol\": \"" + symbol + "\",\n\t\"qty\": " + qty +\
@@ -281,14 +281,21 @@ def sell(alpaca, symbol):
     querystring = {"status":"all","direction":"desc"}
     return alpaca.post("orders", payload, querystring)
 
+def list_all_open_orders(alpaca):
+    querystring = {"status":"open","direction":"desc"}
+    payload = ""
+    return alpaca.get("orders", payload, querystring)
+
 def get_current_price(stock):
     IEX = Api("https://cloud.iexapis.com/beta/", None, "pk_11551eefe1bf4f0b81121b498c6a7651")
     response = IEX.get("stock/" + stock.symbol + "/quote?token=" + IEX.key, None, None)
     stock.price = float(response['latestPrice'])
     return stock.price
 
-def perform_trades():
-    pass
+def get_an_open_position(alpaca, symbol):
+    payload = ""
+    querystring = ""
+    return alpaca.get("positions/" + symbol, payload, querystring)
 
 def main():
     alpaca = Api("https://paper-api.alpaca.markets/v1/", {
@@ -301,7 +308,7 @@ def main():
     for stock in stock_list:
         print(f'Processing: ' + stock.name)
         print("News Sentiment")
-        #stock.set_news_sentiment(10)
+        stock.set_news_sentiment(10)
         print("Setting Moving Average")
         stock.set_moving_avg()
         print("Setting Profit Loss")
@@ -313,24 +320,42 @@ def main():
     while True:
         clock = alpaca.get("clock", None, None)
         if clock['is_open']:
-            
-            for stock in stock_list:
-                print(f'Current Price of ' + stock.name + ' is ' + str(stock.price) + ' with 52 week low of ' + str(stock.week52Low) + ' and sentiment of ' + str(stock.news_sentiment))
-                print(f'Sentiment is ' + str(stock.news_sentiment))
-                print(f'Twitter is ' + str(stock.twitter_sentiment))
-                print(f'Profit and Loss is ' + str(stock.profit_loss))
-                print(f'Moving Average is ' + str(stock.moving_avg))
-                if stock.MLA.decide_trade() > 0:
-                    #buy(alpaca, stock.symbol)
-                    print(f'Bought ' + stock.name + ' for ' + str(stock.price))
-                else:
-                    print(f"Do not buy " + stock.name)
-                print('')
-            time.sleep(60)
+
+            open_orders = list_all_open_orders(alpaca)
+            if len(open_orders) == 0 :     
+                for stock in stock_list:
+                    position = get_an_open_position(alpaca, stock.symbol)
+                    print(f'Current Price of ' + stock.name + ' is ' + str(stock.price) + ' with 52 week low of ' + str(stock.week52Low) + ' and sentiment of ' + str(stock.news_sentiment))
+                    print(f'Sentiment is ' + str(stock.news_sentiment))
+                    print(f'Twitter is ' + str(stock.twitter_sentiment))
+                    print(f'Profit and Loss is ' + str(stock.profit_loss))
+                    print(f'Moving Average is ' + str(stock.moving_avg))
+
+                    
+                    trade = stock.MLA.decide_trade()
+                    if trade > 1:
+                        buy(alpaca, stock.symbol, "10")
+                        print(f'Bought ' + stock.name + ' for ' + str(stock.price) + 'at qty: 10')
+                    elif trade == 1:
+                        buy(alpaca, stock.symbol, "1")
+                        print(f'Bought ' + stock.name + ' for ' + str(stock.price) + 'at qty: 1')
+                    else:
+                        print(f"Do not buy " + stock.name)
+                    print('')
+                    time.sleep(10)
+                time.sleep(60)
+                
+                open_orders = list_all_open_orders(alpaca)
+                if len(open_orders) == 0 : 
+                    for stock in stock_list:
+                        position = get_an_open_position(alpaca, stock.symbol)
+                        if 'qty' in position:
+                            if stock.sell == 1 or (float(position['current_price']) - float(position['avg_entry_price']) > 1.0):
+                                sell(alpaca, stock.symbol, position['qty'])
 
         else:
             print('Markets are closed')
             time.sleep(60)
 
-
 main()
+
