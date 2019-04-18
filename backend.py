@@ -1,5 +1,3 @@
-
-
 class MLA():
     def __init__(self, company_weight, four_weight, profit_weight, twitter_weight, moving_weight):
         self.company_weight = company_weight
