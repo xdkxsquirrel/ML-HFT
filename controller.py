@@ -126,7 +126,10 @@ class Stock():
             if(i['content']!=None):
                 sentiment = indicoio.sentiment(i['content'])
                 sentiment_list.append(float(sentiment))
-                self.news_sentiment = np.average(sentiment_list)
+                if np.average(sentiment_list) > .55:
+                    self.news_sentiment = 1
+                else:
+                    self.news_sentiment = 0 
                 if( newsfeed['articles'].index(i) > number_of_articles):
                     break
 
@@ -358,6 +361,17 @@ def main():
                         if 'qty' in position:
                             if stock.sell == 1 or (float(position['current_price']) - float(position['avg_entry_price']) > 1.0):
                                 sell(alpaca, stock.symbol, position['qty'])
+                
+                time.sleep(60)
+                for stock in stock_list:
+                    print(f'Processing: ' + stock.name)
+                    print("Setting Moving Average")
+                    stock.set_moving_avg()
+                    print("Setting Profit Loss")
+                    stock.set_profit_loss()
+                    print("Twitter Sentiment")
+                    stock.set_twitter_sentiment()
+                    time.sleep(60)
 
         else:
             print('Markets are closed')
