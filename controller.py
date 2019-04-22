@@ -128,8 +128,10 @@ class Stock():
                 sentiment_list.append(float(sentiment))
                 if np.average(sentiment_list) > .55:
                     self.news_sentiment = 1
+                    self.MLA.news_data = 1
                 else:
-                    self.news_sentiment = 0 
+                    self.news_sentiment = 0
+                    self.MLA.news_data = 0
                 if( newsfeed['articles'].index(i) > number_of_articles):
                     break
 
@@ -146,11 +148,13 @@ class Stock():
         except:
             print("IEX is down right now")
             self.profit_loss = 0
+            self.MLA.profit_data = 0
             return
 
         if "financials" not in data:
             print(f'Stock ' + self.symbol + ' does not have Financials')
             self.profit_loss = 0
+            self.MLA.profit_data = 0
             return
         current = float(data[u'financials'][0]['totalRevenue'])
         twoQtrAgo = float(data[u'financials'][1]['totalRevenue'])
@@ -158,8 +162,10 @@ class Stock():
 
         if current > twoQtrAgo and twoQtrAgo > threeQtrAgo:
             self.profit_loss = 1
+            self.MLA.profit_data = 1
         else:
             self.profit_loss = 0
+            self.MLA.profit_data = 0
 
     def set_twitter_sentiment(self):
         api = TwitterClient()
@@ -176,8 +182,10 @@ class Stock():
 
         if (positive + neutral >= 80):
             self.twitter_sentiment = 1
+            self.MLA.twitter_data = 1
         else:
             self.twitter_sentiment = 0
+            self.MLA.twitter_data = 0
 
     def set_moving_avg(self):
         URL = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=" + self.symbol + "&apikey=WRV0ICYRFLQOX96V"
@@ -187,6 +195,7 @@ class Stock():
         if "Time Series (Daily)" not in data:
             print(f'Stock ' + self.symbol + ' does not have Time Series Daily')
             self.moving_avg = 0
+            self.MLA.moving_data = 0
             return
         for a in data["Time Series (Daily)"]:
             count = count + 1
@@ -209,6 +218,7 @@ class Stock():
             # of touching the long term moving average
             if currnetPrice > movingAvg:
                 self.moving_avg = 1
+                self.MLA.moving_data = 1
         else:
             # slope is moving up
             # if slope is moving up and we already have bought it
@@ -220,8 +230,10 @@ class Stock():
                 #sell it
                 self.sell = 1
                 self.moving_avg = 0
+                self.MLA.moving_data = 0
             else:
                 self.moving_avg = 0
+                self.MLA.moving_data = 0
 
             # eventually we want to see if the the slope of the 10 day average is comming down
             # and the current price is within a few % of the long term moving average
@@ -234,7 +246,7 @@ class Stock():
 
 def init_stocks():
     IEX = Api("https://cloud.iexapis.com/beta/", None, "pk_11551eefe1bf4f0b81121b498c6a7651") #secret = sk_8df6ccfac04742f194e71f6140cf6944
-    '''
+    
     response = IEX.get("stock/TSLA/quote?token=" + IEX.key, None, None)
     Tesla = Stock("TSLA", "Telsa", float(response['latestPrice']), float(response['week52Low']))
     response = IEX.get("stock/AAPL/quote?token=" + IEX.key, None, None)
@@ -270,6 +282,7 @@ def init_stocks():
     JPMorgan = Stock("JPM", "JPMorgan Chase", 1337.0, 1337.0)
     IBM = Stock("IBM", "IBM", 1337.0, 1337.0)
     Amazon = Stock("AMZN", "Amazon", 1337.0, 1337.0)
+    '''
     return [Tesla, Apple, Walmart, JNJ, Google, Exxon, Microsoft, GE, JPMorgan, IBM, Amazon]
 
 def buy(alpaca, symbol, qty):
@@ -360,6 +373,7 @@ def main():
                         position = get_an_open_position(alpaca, stock.symbol)
                         if 'qty' in position:
                             if stock.sell == 1 or (float(position['current_price']) - float(position['avg_entry_price']) > 1.0):
+                                pass
                                 sell(alpaca, stock.symbol, position['qty'])
                 
                 time.sleep(60)

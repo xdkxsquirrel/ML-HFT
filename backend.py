@@ -13,6 +13,15 @@ class MLA():
         self.moving_data = 0
 
     def decide_trade(self):
+        print(f'CD: ' + str(self.company_data) + 'CW: ' + str(self.company_weight) + \
+            ' | MD: ' + str(self.moving_data) + 'MW: ' + str(self.moving_weight) + \
+                ' | PD: ' + str(self.profit_data) + 'PW: ' + str(self.profit_weight) + \
+                    ' | TD: ' + str(self.twitter_data) + 'TW: ' + str(self.twitter_weight))
+        print(self.company_data * self.company_weight + \
+            self.moving_data * self.moving_weight + \
+                self.profit_data * self.profit_weight + \
+                    self.twitter_data * self.twitter_weight)
+                    
         if(self.company_data * self.company_weight + \
             self.moving_data * self.moving_weight + \
                 self.profit_data * self.profit_weight + \
@@ -21,7 +30,7 @@ class MLA():
         elif (self.company_data * self.company_weight + \
             self.moving_data * self.moving_weight + \
                 self.profit_data * self.profit_weight + \
-                    self.twitter_data * self.twitter_weight) > 40:
+                    self.twitter_data * self.twitter_weight) > 20:
             return 1
         else:
             return 0
