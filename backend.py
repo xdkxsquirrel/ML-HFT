@@ -25,12 +25,12 @@ class MLA():
         if(self.company_data * self.company_weight + \
             self.moving_data * self.moving_weight + \
                 self.profit_data * self.profit_weight + \
-                    self.twitter_data * self.twitter_weight) > 70:
+                    self.twitter_data * self.twitter_weight) > 76:
             return 2
         elif (self.company_data * self.company_weight + \
             self.moving_data * self.moving_weight + \
                 self.profit_data * self.profit_weight + \
-                    self.twitter_data * self.twitter_weight) > 30:
+                    self.twitter_data * self.twitter_weight) > 55:
             return 1
         else:
             return 0

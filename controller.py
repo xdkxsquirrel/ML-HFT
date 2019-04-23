@@ -128,10 +128,10 @@ class Stock():
                 sentiment_list.append(float(sentiment))
                 if np.average(sentiment_list) > .55:
                     self.news_sentiment = 1
-                    self.MLA.news_data = 1
+                    self.MLA.company_data = 1
                 else:
                     self.news_sentiment = 0
-                    self.MLA.news_data = 0
+                    self.MLA.company_data = 0
                 if( newsfeed['articles'].index(i) > number_of_articles):
                     break
 
@@ -357,10 +357,10 @@ def main():
                     trade = stock.MLA.decide_trade()
                     if trade > 1:
                         buy(alpaca, stock.symbol, "10")
-                        print(f'Bought ' + stock.name + ' for ' + str(stock.price) + 'at qty: 10')
+                        print(f'Bought ' + stock.name + ' for ' + str(stock.price) + ' at qty: 10')
                     elif trade == 1:
                         buy(alpaca, stock.symbol, "1")
-                        print(f'Bought ' + stock.name + ' for ' + str(stock.price) + 'at qty: 1')
+                        print(f'Bought ' + stock.name + ' for ' + str(stock.price) + ' at qty: 1')
                     else:
                         print(f"Do not buy " + stock.name)
                     print('')
@@ -368,13 +368,22 @@ def main():
                 time.sleep(60)
                 
                 open_orders = list_all_open_orders(alpaca)
-                if len(open_orders) == 0 : 
-                    for stock in stock_list:
-                        position = get_an_open_position(alpaca, stock.symbol)
-                        if 'qty' in position:
-                            if stock.sell == 1 or (float(position['current_price']) - float(position['avg_entry_price']) > 1.0):
-                                pass
-                                sell(alpaca, stock.symbol, position['qty'])
+                print("")
+                print("Sell Stuff")
+                while len(open_orders) is not 0 : 
+                    open_orders = list_all_open_orders(alpaca)
+                    print('waiting....')
+                    time.sleep(10)
+                for stock in stock_list:
+                    position = get_an_open_position(alpaca, stock.symbol)
+                    if 'qty' in position:
+                        if stock.sell == 1 or (float(position['current_price']) - float(position['avg_entry_price']) > 1.0):
+                            print(f'Sold all ' + stock.name + ' for ' + str(position['current_price']))
+                            sell(alpaca, stock.symbol, position['qty'])
+                        else:
+                            print(f'Do not Sell ' + stock.name)
+                    else:
+                        print('No positions')
                 
                 time.sleep(60)
                 for stock in stock_list:
