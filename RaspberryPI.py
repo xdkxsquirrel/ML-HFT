@@ -8,81 +8,34 @@ from tweepy import OAuthHandler
 from textblob import TextBlob
 import FPGA
 
+# I2C Comms
+
+def main():
+    is_new_day = True
+    stock_list = init_stocks()
+
+    while True:
+        if Alpaca.stock_market_is_open():
+            print("Markets are open")
+
+            is_new_day = False
+
+        else: 
+            is_new_day = True
+            print("Markets are closed")
+
+class Alpaca:
+    def __init__(self):
+        self.header = {'content-type': "application/json",
+            'apca-api-secret-key': "fRPyMcc4OootRhgez/W0HLPAv1IXbD/E6OaAzJTo",
+            'apca-api-key-id': "PK6WI3ROFW19GXBRAQ4O"}
+        self.address = "https://paper-api.alpaca.markets/v1/"
+
+
+    def stock_market_is_open():
+        return True
 
 ## Final Version For Raspberry Pi Python 3.5.3
-
-#***************************TWITTER*************************************************************#
-# this class will be used to gather sentiment on stock trades via twitter
-class TwitterClient(object):
-
-    def __init__(self):
-        consumer_key = '9TxQyYHvAujwVOGNW5Di97lsL'
-        consumer_secret = '3TX9wmny6Rt1KQ5zwfCbta7X1L1Zw7rJJiuV44rngVarupdQAt'
-        access_token = '1103715647127613441-h28XoZXcKIOSxP18U2vnqlJNGqPNao'
-        access_token_secret = 'dNtpJ5825K070HBSFOCnD3CayTgm5DmvZmHrWZw2DgYkS'
-
-        try:
-            self.auth = OAuthHandler(consumer_key, consumer_secret)
-
-            # set access token and secret
-            self.auth.set_access_token(access_token, access_token_secret)
-            self.api = tweepy.API(self.auth)
-
-        except:
-            print("Error: Authentication Failed")
-
-    def clean_tweet(self, tweet):
-        return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t]) |(\w+:\/\/\S+)", " ", tweet).split())
-
-    def get_tweet_sentiment(self, tweet):
-
-        # create TextBlob object of passed tweet text
-        analysis = TextBlob(self.clean_tweet(tweet))
-        # set sentiment
-        if analysis.sentiment.polarity > 0:
-            return 'positive'
-        elif analysis.sentiment.polarity == 0:
-            return 'neutral'
-        else:
-            return 'negative'
-
-    def get_tweets(self, query, count):
-
-        tweets = []
-
-        try:
-            # call twitter api to get tweets
-            fetched_tweets = self.api.search(q=query, count=count)
-
-            # parsing tweets one by one
-            for tweet in fetched_tweets:
-                # empty dictionary to store required params of a tweet
-                parsed_tweet = {}
-
-                # saving text of tweet
-                parsed_tweet['text'] = tweet.text
-                # saving sentiment of tweet
-                parsed_tweet['sentiment'] = self.get_tweet_sentiment(tweet.text)
-
-                # append parsed tweet to tweets list
-                if tweet.retweet_count > 0:
-                    # if tweet has retweets, ensure that it is appended only once
-                    if parsed_tweet not in tweets:
-                        tweets.append(parsed_tweet)
-                else:
-                    tweets.append(parsed_tweet)
-
-                    # return parsed tweets
-            return tweets
-
-        except tweepy.TweepError as e:
-            # print error (if any)
-            print("Error : " + str(e))
-
-        except:
-              print("Unknown Error in Twitter")
-#*********************************************************************************************************#
-
 class Api():
     def __init__(self, url, headers, key):
         self.url = url 
@@ -108,20 +61,6 @@ class Api():
         data = '{"data": "' + payload + '"}'
         response = requests.post('https://apiv2.indico.io/sentiment', headers=headers, data=data)
         return(response.json())
-
-class Stock():
-    def __init__(self, symbol, name, price, week52Low):
-        self.symbol = symbol
-        self.name = name
-        self.price = price
-        self.week52Low = week52Low
-        self.news_sentiment = 0
-        self.four_candle = 0
-        self.profit_loss = 0
-        self.twitter_sentiment = 0
-        self.moving_avg = 0
-        self.MLA = FPGA.MLA(25, 0, 25, 25, 25)
-        self.sell = 0
 
     def set_news_sentiment(self, number_of_articles):
         try:
@@ -394,4 +333,29 @@ def main():
             time.sleep(60)
 
 
+class Stock():
+    def __init__(self, symbol, name):
+        self.symbol = symbol
+        self.name = name
+        self.current_price = 0
+        self.previous_purchase_price = 0
+        self.week52Low = 0
+
+    def set_current_price(self, price):
+        self.current_price = price
+
+    def set_previous_price(self, price):
+        self.previous_purchase_price = price
+
+    def set_week52Low(self, price):
+        self.week52Low = price
+        
+
+
+# Initialize the I2C Connection with the FPGA
+# Setup Stock Struct
+# Get current prices
+
+
+# 
 main()
