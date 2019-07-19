@@ -1,5 +1,4 @@
 import time
-import backend
 import datetime
 import requests
 import numpy as np
@@ -7,6 +6,8 @@ import re
 import tweepy
 from tweepy import OAuthHandler
 from textblob import TextBlob
+import FPGA
+
 
 ## Final Version For Raspberry Pi Python 3.5.3
 
@@ -119,7 +120,7 @@ class Stock():
         self.profit_loss = 0
         self.twitter_sentiment = 0
         self.moving_avg = 0
-        self.MLA = backend.MLA(25, 0, 25, 25, 25)
+        self.MLA = FPGA.MLA(25, 0, 25, 25, 25)
         self.sell = 0
 
     def set_news_sentiment(self, number_of_articles):
