@@ -1,7 +1,7 @@
 
 #***************************TWITTER*************************************************************#
 # this class will be used to gather sentiment on stock trades via twitter
-class TwitterClient(object):
+class Twitter(object):
 
     def __init__(self):
         consumer_key = '9TxQyYHvAujwVOGNW5Di97lsL'

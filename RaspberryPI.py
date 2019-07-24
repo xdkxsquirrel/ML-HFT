@@ -1,65 +1,190 @@
 import time
+import requests
+import config
+import FPGA
+#from Strategies.companydata import Company
+#from Strategies.fourcandle import Fourcandle
+#from Strategies.profitloss import Profitloss
+from Strategies.twitter import Twitter
+
+# For Raspberry Pi and Python 3.5.3
 
 class Stock():
-    def __init__(self, symbol, name, price, week52Low):
-        self.symbol = symbol
-        self.name = name
-        self.price = price
-        self.week52Low = week52Low
+      def __init__(self, symbol, name):
+            self.symbol = symbol
+            self.name = name
+            self.price = 0
+            self.week52Low = 0
+            self.mla = FPGA.MLA()
+
+      def get_stock_data(self):
+            url = "https://cloud.iexapis.com/beta/stock/" + self.symbol + "/quote?token=" + config.IEX_api_secret_key
+            response = requests.request("GET", url, data=None, headers=None, params=None)
+            return response.json()
+
+      def buy(self):
+            try:
+                  kind = "market"
+                  time_in_force = "gtc"
+                  qty = 1
+                  payload = "{\n\t\"symbol\": \"" + self.symbol + "\",\n\t\"qty\": " + qty +\
+                                    ",\n\t\"side\": \"buy\",\n\t\"type\": \"" + kind +\
+                                    "\",\n\t\"time_in_force\": \"" + time_in_force + "\"\n}"
+                  querystring = {"status":"all","direction":"desc"}
+                  url = "https://paper-api.alpaca.markets/v1/orders"
+                  headers = {'content-type': "application/json", 'apca-api-secret-key': config.alpaca_api_secret_key, 'apca-api-key-id': config.alpaca_api_key_id}
+                  response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
+            except: 
+                  print("Failed to buy " + self.name)
+
+      def sell(self):
+            try:
+                  url = "https://paper-api.alpaca.markets/v1/positions/" + self.symbol
+                  headers = {'content-type': "application/json", 'apca-api-secret-key': config.alpaca_api_secret_key, 'apca-api-key-id': config.alpaca_api_key_id}
+                  response = requests.request("GET", url, data=None, headers=headers, params=None)
+                  positions = response.json()
+            except:
+                  print("Failed getting open positions for " + self.name)
+            if 'qty' in positions:
+                  try:
+                        kind = "market"
+                        time_in_force = "gtc"
+                        qty = positions['qty']
+                        payload = "{\n\t\"symbol\": \"" + self.symbol + "\",\n\t\"qty\": " + qty +\
+                                          ",\n\t\"side\": \"sell\",\n\t\"type\": \"" + kind +\
+                                          "\",\n\t\"time_in_force\": \"" + time_in_force + "\"\n}"
+                        querystring = {"status":"all","direction":"desc"}
+                        url = "https://paper-api.alpaca.markets/v1/orders"
+                        headers = {'content-type': "application/json", 'apca-api-secret-key': config.alpaca_api_secret_key, 'apca-api-key-id': config.alpaca_api_key_id}
+                        response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
+                        print(response.json())
+                  except: 
+                        print("Failed to sell " + self.name)
+            else:
+                  print("!!No Positions")
 
 def init_stocks():
-      return [0,0,0,0,0,0,0,0]
-'''
-    try:
-      IEX = 
-
-      response = IEX.get("stock/TSLA/quote?token=" + IEX.key, None, None)
-      Tesla = Stock("TSLA", "Telsa", float(response['latestPrice']), float(response['week52Low']))
-      response = IEX.get("stock/AAPL/quote?token=" + IEX.key, None, None)
-      Apple = Stock("AAPL", "Apple", float(response['latestPrice']), float(response['week52Low']))
-      response = IEX.get("stock/WMT/quote?token=" + IEX.key, None, None)
-      Walmart = Stock("WMT", "Walmart", float(response['latestPrice']), float(response['week52Low']))
-      response = IEX.get("stock/JNJ/quote?token=" + IEX.key, None, None)
-      JNJ = Stock("JNJ", "Johnson & Johnson", float(response['latestPrice']), float(response['week52Low']))
-      response = IEX.get("stock/GOOG/quote?token=" + IEX.key, None, None)
-      Google = Stock("GOOG", "Google", float(response['latestPrice']), float(response['week52Low']))
-      response = IEX.get("stock/XOM/quote?token=" + IEX.key, None, None)
-      Exxon = Stock("XOM", "Exxon", float(response['latestPrice']), float(response['week52Low']))
-      response = IEX.get("stock/MSFT/quote?token=" + IEX.key, None, None)
-      Microsoft = Stock("MSFT", "Microsoft", float(response['latestPrice']), float(response['week52Low']))
-      response = IEX.get("stock/GE/quote?token=" + IEX.key, None, None)
-      GE = Stock("GE", "General Electric", float(response['latestPrice']), float(response['week52Low']))
-      response = IEX.get("stock/JPM/quote?token=" + IEX.key, None, None)
-      JPMorgan = Stock("JPM", "JPMorgan Chase", float(response['latestPrice']), float(response['week52Low']))
-      response = IEX.get("stock/IBM/quote?token=" + IEX.key, None, None)
-      IBM = Stock("IBM", "IBM", float(response['latestPrice']), float(response['week52Low']))
-      response = IEX.get("stock/AMZN/quote?token=" + IEX.key, None, None)
-      Amazon = Stock("AMZN", "Amazon", float(response['latestPrice']), float(response['week52Low']))
+      Tesla = Stock("TSLA", "Telsa")
+      Apple = Stock("AAPL", "Apple")
+      Walmart = Stock("WMT", "Walmart")
+      JNJ = Stock("JNJ", "Johnson & Johnson")
+      Google = Stock("GOOG", "Google")
+      Exxon = Stock("XOM", "Exxon")
+      Microsoft = Stock("MSFT", "Microsoft")
+      GE = Stock("GE", "General Electric")
+      JPMorgan = Stock("JPM", "JPMorgan Chase")
+      IBM = Stock("IBM", "IBM")
+      Amazon = Stock("AMZN", "Amazon")
       return [Tesla, Apple, Walmart, JNJ, Google, Exxon, Microsoft, GE, JPMorgan, IBM, Amazon]
 
-    except:
-            print("Error in init stocks")
-'''
+def markets_are_open():
+      url = "https://paper-api.alpaca.markets/v1/clock"
+      headers = {'content-type': "application/json", 'apca-api-secret-key': config.alpaca_api_secret_key, 'apca-api-key-id': config.alpaca_api_key_id}
+      response = requests.request("GET", url, data=None, headers=headers, params=None)
+      if response.json()['is_open']:
+          return True
+      else:
+          return False
+
+def have_open_orders():
+      querystring = {"status":"open","direction":"desc"}
+      payload = ""
+      url = "https://paper-api.alpaca.markets/v1/orders"
+      headers = {'content-type': "application/json", 'apca-api-secret-key': config.alpaca_api_secret_key, 'apca-api-key-id': config.alpaca_api_key_id}
+      response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
+      return response.json()
 
 def main():
-      stock_list = init_stocks()
-      new_day = True
-      while(1):            
-            while new_day:
-                  # Check if Markets are open
-                  for stock in stock_list:
-                        pass
+      purchases = list()
+      stocks = init_stocks()
+      while(1):
+            while markets_are_open():
+                  for stock in stocks:
+                        print("     Gathering Stock Data")  #############################################
+                        try:
+                              response = stock.get_stock_data()
+                              stock.price = float(response['latestPrice'])
+                              stock.week52Low = float(response['week52Low'])
+                        except: 
+                              print("!!Gather Stock Data Failed for " + stock.name)
 
-# Gather Stock Data
-# Get News Sentiment
-# Get Four Candles
-# Get Profit and Loss
-# Get Twitter Sentiment
-# Get Moving Average
-# Send Data to MLA
+                        # Get News Sentiment
+                        stock.mla.company_data = 0
 
-# Delay for 5 minutes
+                        # Get Four Candles
+                        stock.mla.four_data = 1
 
-# Adjust Weights
+                        # Get Profit and Loss
+                        stock.mla.profit_data = 0
 
-# Sell All Held Stocks
+                        # Get Twitter Sentiment
+                        stock.mla.twitter_data = 1
+
+                        # Get Moving Average
+                        stock.mla.moving_data = 1
+
+                        print("     Sending Data to MLA")#############################################
+                        buy = stock.mla.decide_trade()
+
+                        print("     Buying Recomendataions from MLA")#################################
+                        try:
+                              while have_open_orders():
+                                    print("  Currently have open orders")
+                                    time.sleep(120)
+                        except:
+                              print("!!Finding Open Orders Failed")
+                        if buy:
+                              stock.buy()
+                              purchases.append({ "Stock" : stock, "Price" : stock.price, "News" : stock.mla.company_data, "Candles" : stock.mla.four_data, "P&L" : stock.mla.profit_data, "Twitter" : stock.mla.twitter_data, "Moving" : stock.mla.moving_data})
+                              print("     Bought " + stock.name)
+                        else: 
+                              print("     Did Not Buy " + stock.name)
+                              
+                  # Delay for 1 minute
+                  #time.sleep(60)
+
+                  print("     Adjusting MLA Weights")#############################################
+                  for purchase in purchases:
+                        try:
+                              response = purchase["Stock"].get_stock_data()
+                              current_price = float(response['latestPrice'])
+                              if current_price > purchase["Price"]:
+                                    print("     Stock Price Went UP for " + purchase["Stock"].name)
+                              else:
+                                    print("     Stock Price Went Down for " + purchase["Stock"].name)
+
+                        except:
+                              print("!!Failure Adjusting Weights for " + purchase["Stock"].name)
+
+                  print("     Selling All Stocks Previously Purchased")#################################
+                  for purchase in purchases:
+                        try:
+                              while have_open_orders():
+                                    print("  Currently have open orders")
+                                    time.sleep(120)
+                        except:
+                              print("!!Finding Open Orders Failed")
+                        try:
+                              purchase["Stock"].sell()
+                              purchases.remove(purchase)
+                        except: 
+                              print("!!Failure Selling " + purchase["Stock"].name)
+            
+            print(" Markets are closed")
+            # Delay for 15 minutes
+            time.sleep(900)
+
+#main()
+Tesla = Stock("AAPL", "Tesla")
+Tesla.sell()
+
+
+
+
+
+
+
+
+
+
+
