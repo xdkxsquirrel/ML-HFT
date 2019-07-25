@@ -26,20 +26,20 @@ class Stock():
             try:
                   kind = "market"
                   time_in_force = "gtc"
-                  qty = 1
+                  qty = "1"
                   payload = "{\n\t\"symbol\": \"" + self.symbol + "\",\n\t\"qty\": " + qty +\
                                     ",\n\t\"side\": \"buy\",\n\t\"type\": \"" + kind +\
                                     "\",\n\t\"time_in_force\": \"" + time_in_force + "\"\n}"
                   querystring = {"status":"all","direction":"desc"}
-                  url = "https://paper-api.alpaca.markets/v1/orders"
+                  url = "https://paper-api.alpaca.markets/v2/orders"
                   headers = {'content-type': "application/json", 'apca-api-secret-key': config.alpaca_api_secret_key, 'apca-api-key-id': config.alpaca_api_key_id}
-                  response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
+                  response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
             except: 
                   print("Failed to buy " + self.name)
 
       def sell(self):
             try:
-                  url = "https://paper-api.alpaca.markets/v1/positions/" + self.symbol
+                  url = "https://paper-api.alpaca.markets/v2/positions/" + self.symbol
                   headers = {'content-type': "application/json", 'apca-api-secret-key': config.alpaca_api_secret_key, 'apca-api-key-id': config.alpaca_api_key_id}
                   response = requests.request("GET", url, data=None, headers=headers, params=None)
                   positions = response.json()
@@ -54,10 +54,9 @@ class Stock():
                                           ",\n\t\"side\": \"sell\",\n\t\"type\": \"" + kind +\
                                           "\",\n\t\"time_in_force\": \"" + time_in_force + "\"\n}"
                         querystring = {"status":"all","direction":"desc"}
-                        url = "https://paper-api.alpaca.markets/v1/orders"
+                        url = "https://paper-api.alpaca.markets/v2/orders"
                         headers = {'content-type': "application/json", 'apca-api-secret-key': config.alpaca_api_secret_key, 'apca-api-key-id': config.alpaca_api_key_id}
-                        response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
-                        print(response.json())
+                        response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
                   except: 
                         print("Failed to sell " + self.name)
             else:
@@ -78,7 +77,7 @@ def init_stocks():
       return [Tesla, Apple, Walmart, JNJ, Google, Exxon, Microsoft, GE, JPMorgan, IBM, Amazon]
 
 def markets_are_open():
-      url = "https://paper-api.alpaca.markets/v1/clock"
+      url = "https://paper-api.alpaca.markets/v2/clock"
       headers = {'content-type': "application/json", 'apca-api-secret-key': config.alpaca_api_secret_key, 'apca-api-key-id': config.alpaca_api_key_id}
       response = requests.request("GET", url, data=None, headers=headers, params=None)
       if response.json()['is_open']:
@@ -89,10 +88,22 @@ def markets_are_open():
 def have_open_orders():
       querystring = {"status":"open","direction":"desc"}
       payload = ""
-      url = "https://paper-api.alpaca.markets/v1/orders"
+      url = "https://paper-api.alpaca.markets/v2/orders"
       headers = {'content-type': "application/json", 'apca-api-secret-key': config.alpaca_api_secret_key, 'apca-api-key-id': config.alpaca_api_key_id}
       response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
       return response.json()
+
+def sell_all_shares():
+      try:
+            while have_open_orders():
+                  print("  Currently have open orders")
+                  time.sleep(120)
+      except:
+            print("!!Finding Open Orders Failed")
+      try:
+            pass
+      except:
+            print("!!Failed Selling all shares")
 
 def main():
       purchases = list()
@@ -141,7 +152,7 @@ def main():
                               print("     Did Not Buy " + stock.name)
                               
                   # Delay for 1 minute
-                  #time.sleep(60)
+                  time.sleep(60)
 
                   print("     Adjusting MLA Weights")#############################################
                   for purchase in purchases:
@@ -157,26 +168,19 @@ def main():
                               print("!!Failure Adjusting Weights for " + purchase["Stock"].name)
 
                   print("     Selling All Stocks Previously Purchased")#################################
-                  for purchase in purchases:
-                        try:
-                              while have_open_orders():
-                                    print("  Currently have open orders")
-                                    time.sleep(120)
-                        except:
-                              print("!!Finding Open Orders Failed")
-                        try:
-                              purchase["Stock"].sell()
-                              purchases.remove(purchase)
-                        except: 
-                              print("!!Failure Selling " + purchase["Stock"].name)
+                  sell_all_shares()
+                  purchases = list()
+                  exit()
+                  time.sleep(60)
+                  
             
             print(" Markets are closed")
             # Delay for 15 minutes
             time.sleep(900)
 
 #main()
-Tesla = Stock("AAPL", "Tesla")
-Tesla.sell()
+xom = Stock("AAPL", "Xilinx")
+xom.sell()
 
 
 
