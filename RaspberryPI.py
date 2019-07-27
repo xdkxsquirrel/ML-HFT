@@ -2,9 +2,10 @@ import time
 import requests
 import config
 import FPGA
-#from Strategies.companydata import Company
-#from Strategies.fourcandle import Fourcandle
-#from Strategies.profitloss import Profitloss
+from Strategies.movingaverage import Average
+from Strategies.companydata import Company
+from Strategies.fourcandle import Fourcandle
+from Strategies.profitloss import Profitloss
 from Strategies.twitter import Twitter
 
 # For Raspberry Pi and Python 3.5.3
@@ -120,19 +121,24 @@ def main():
                               print("!!Gather Stock Data Failed for " + stock.name)
 
                         # Get News Sentiment
-                        stock.mla.company_data = 0
+                        temp = Company()
+                        stock.mla.company_data = temp.get_news_sentiment(20, stock.name)
 
-                        # Get Four Candles
-                        stock.mla.four_data = 1
+                        # Get Four Candles 
+                        temp = Fourcandle()
+                        stock.mla.four_data = temp.get_four_candle_hammer()
 
-                        # Get Profit and Loss
-                        stock.mla.profit_data = 0
+                        # Get Profit and Loss 
+                        temp = Profitloss()
+                        stock.mla.profit_data = temp.get_profit_loss(stock.symbol)
 
                         # Get Twitter Sentiment
-                        stock.mla.twitter_data = 1
+                        temp = Twitter()
+                        stock.mla.twitter_data = temp.get_twitter_sentiment(stock.name)
 
                         # Get Moving Average
-                        stock.mla.moving_data = 1
+                        temp = Average()
+                        stock.mla.moving_data = temp.get_moving_avg(stock.symbol)
 
                         print("     Sending Data to MLA")#############################################
                         buy = stock.mla.decide_trade()
@@ -160,9 +166,19 @@ def main():
                               response = purchase["Stock"].get_stock_data()
                               current_price = float(response['latestPrice'])
                               if current_price > purchase["Price"]:
-                                    print("     Stock Price Went UP for " + purchase["Stock"].name)
+                                    print("   " + purchase["Stock"].mla.learn(purchase["News"], purchase["Candles"], purchase["P&L"], purchase["Twitter"], purchase["Moving"]))
                               else:
-                                    print("     Stock Price Went Down for " + purchase["Stock"].name)
+                                    if  purchase["News"] == 1:
+                                          news = -1
+                                    if purchase["Candles"] == 1:
+                                          candles = -1
+                                    if purchase["P&L"] == 1:
+                                          pandl = -1
+                                    if purchase["Twitter"] == 1:
+                                          twitter = -1
+                                    if purchase["Moving"] == 1:
+                                          moving = -1
+                                    print("   " + purchase["Stock"].mla.learn(news, candles, pandl, twitter, moving))
 
                         except:
                               print("!!Failure Adjusting Weights for " + purchase["Stock"].name)
@@ -178,9 +194,7 @@ def main():
             # Delay for 15 minutes
             time.sleep(900)
 
-#main()
-xom = Stock("AAPL", "Xilinx")
-xom.sell()
+main()
 
 
 

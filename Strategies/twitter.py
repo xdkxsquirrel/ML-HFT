@@ -1,13 +1,17 @@
+import numpy as np
+import re
+import config
+import tweepy
+from tweepy import OAuthHandler
+from textblob import TextBlob
 
-#***************************TWITTER*************************************************************#
-# this class will be used to gather sentiment on stock trades via twitter
-class Twitter(object):
+class TwitterClient(object):
 
     def __init__(self):
-        consumer_key = '9TxQyYHvAujwVOGNW5Di97lsL'
-        consumer_secret = '3TX9wmny6Rt1KQ5zwfCbta7X1L1Zw7rJJiuV44rngVarupdQAt'
-        access_token = '1103715647127613441-h28XoZXcKIOSxP18U2vnqlJNGqPNao'
-        access_token_secret = 'dNtpJ5825K070HBSFOCnD3CayTgm5DmvZmHrWZw2DgYkS'
+        consumer_key = config.tweepy_consumer_key
+        consumer_secret = config.tweepy_consumer_secret
+        access_token = config.tweepy_access_token
+        access_token_secret = config.tweepy_access_token_secret
 
         try:
             self.auth = OAuthHandler(consumer_key, consumer_secret)
@@ -69,4 +73,28 @@ class Twitter(object):
 
         except:
               print("Unknown Error in Twitter")
-#*********************************************************************************************************#
+
+class Twitter(object):
+
+      def __init__(self):
+            pass
+
+      def  get_twitter_sentiment(self, name):
+            api = TwitterClient()
+            # Get 100 tweets of "__"
+            tweets = api.get_tweets(query=name, count=100)
+            # positive tweets
+            ptweets = [tweet for tweet in tweets if tweet['sentiment'] == 'positive']
+            positive = 100 * len(ptweets) / len(tweets)
+            # negative tweets
+            ntweets = [tweet for tweet in tweets if tweet['sentiment'] == 'negative']
+            negative = 100 * len(ptweets) / len(tweets)
+            # neutral tweets
+            neutral = 100 * (len(tweets) - len(ntweets) - len(ptweets)) / len(tweets)
+
+            if (positive + neutral >= 80):
+                  return 1
+            else:
+                  return 0
+
+
