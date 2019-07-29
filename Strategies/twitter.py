@@ -86,13 +86,7 @@ class Twitter(object):
             # positive tweets
             ptweets = [tweet for tweet in tweets if tweet['sentiment'] == 'positive']
             positive = 100 * len(ptweets) / len(tweets)
-            # negative tweets
-            ntweets = [tweet for tweet in tweets if tweet['sentiment'] == 'negative']
-            negative = 100 * len(ptweets) / len(tweets)
-            # neutral tweets
-            neutral = 100 * (len(tweets) - len(ntweets) - len(ptweets)) / len(tweets)
-
-            if (positive + neutral >= 80):
+            if positive > 50:
                   return 1
             else:
                   return 0

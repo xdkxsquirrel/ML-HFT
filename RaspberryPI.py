@@ -107,6 +107,7 @@ def sell_all_shares():
             print("!!Failed Selling all shares")
 
 def main():
+      new_day = True
       purchases = list()
       stocks = init_stocks()
       while(1):
@@ -120,9 +121,10 @@ def main():
                         except: 
                               print("!!Gather Stock Data Failed for " + stock.name)
 
-                        # Get News Sentiment
-                        temp = Company()
-                        stock.mla.company_data = temp.get_news_sentiment(20, stock.name)
+                        # Get News Sentiment.
+                        if new_day:
+                              temp = Company()
+                              stock.mla.company_data = temp.get_news_sentiment(20, stock.name)
 
                         # Get Four Candles 
                         temp = Fourcandle()
@@ -188,13 +190,27 @@ def main():
                   purchases = list()
                   exit()
                   time.sleep(60)
+                  new_day = False
                   
             
             print(" Markets are closed")
             # Delay for 15 minutes
             time.sleep(900)
+            new_day = True
 
-main()
+#main()
+'''
+tesla = Stock("TSLA", "Tesla")
+temp = Company()
+tesla.mla.company_data = temp.get_news_sentiment(20, tesla.name)
+'''
+stocks = init_stocks()
+for stock in stocks:
+      temp = Company()
+      stock.mla.company_data = temp.get_news_sentiment(20, stock.name)
+      print(stock.mla.company_data)
+      print()
+
 
 
 
