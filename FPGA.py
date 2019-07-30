@@ -16,15 +16,11 @@ class MLA():
             self.moving_data = 0
 
       def decide_trade(self):
+            tipping_point = (self.company_weight +  self.four_weight + self.profit_weight + self.twitter_weight + self.moving_weight) / 5
             if(self.company_data * self.company_weight + \
                         self.moving_data * self.moving_weight + \
                         self.profit_data * self.profit_weight + \
-                        self.twitter_data * self.twitter_weight) > 76:
-                  return True
-            elif (self.company_data * self.company_weight + \
-                        self.moving_data * self.moving_weight + \
-                        self.profit_data * self.profit_weight + \
-                        self.twitter_data * self.twitter_weight) > 55:
+                        self.twitter_data * self.twitter_weight) > tipping_point:
                   return True
             else:
                   return False
