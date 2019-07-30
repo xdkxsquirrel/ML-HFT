@@ -38,3 +38,4 @@ class Company(object):
                         return 0
             except:
                   print("Error in News Sentiment")
+                  return 0

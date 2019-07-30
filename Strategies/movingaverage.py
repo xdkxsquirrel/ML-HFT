@@ -11,11 +11,11 @@ class Average(object):
             data = r.json()
             count = total = 0
             if "Time Series (Daily)" not in data:
-                  return 1
+                  return 0
             for a in data["Time Series (Daily)"]:
                   count = count + 1
                   total = float(data["Time Series (Daily)"][a]["4. close"]) + total
-            #print count, float(data["Time Series (Daily)"][a]["4. close"]),total
+            #print (float(data["Time Series (Daily)"][a]["4. close"]))
             movingAvg = total / 100
             dates = sorted(data["Time Series (Daily)"].keys(),  reverse=True)
             currentDate = dates[0]
@@ -33,6 +33,8 @@ class Average(object):
             # of touching the long term moving average
                   if currnetPrice > movingAvg:
                         return 1
+                  else:
+                        return 0
             else:
             # slope is moving up
             # if slope is moving up and we already have bought it

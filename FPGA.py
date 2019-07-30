@@ -1,5 +1,5 @@
-MAXWEIGHT = 100
-MINWEIGHT = 0
+MAXWEIGHT = 100.0
+MINWEIGHT = 0.0
 
 class MLA():
       def __init__(self):
@@ -29,20 +29,20 @@ class MLA():
             else:
                   return False
 
-      def learn(self, company_weight, four_weight, profit_weight, twitter_weight, moving_weight):
-            if self.company_weight > MINWEIGHT & self.company_weight < MAXWEIGHT:
-                  self.company_weight += company_weight
+      def learn(self, company_data, four_data, profit_data, twitter_data, moving_data):
+            if (self.company_weight > MINWEIGHT) & (self.company_weight < MAXWEIGHT):
+                  self.company_weight += float(company_data)
 
-            if self.four_weight > MINWEIGHT & self.four_weight < MAXWEIGHT:
-                  self.four_weight += four_weight
+            if (self.four_weight > MINWEIGHT) & (self.four_weight < MAXWEIGHT):
+                  self.four_weight += float(four_data)
 
-            if self.profit_weight > MINWEIGHT & self.profit_weight < MAXWEIGHT:
-                  self.profit_weight += profit_weight
+            if (self.profit_weight > MINWEIGHT) & (self.profit_weight < MAXWEIGHT):
+                  self.profit_weight += float(profit_data)
 
-            if self.twitter_weight > MINWEIGHT & self.twitter_weight < MAXWEIGHT:
-                  self.twitter_weight += twitter_weight
+            if (self.twitter_weight > MINWEIGHT) & (self.twitter_weight < MAXWEIGHT):
+                  self.twitter_weight += float(twitter_data)
 
-            if self.moving_weight > MINWEIGHT & self.moving_weight < MAXWEIGHT:
-                  self.moving_weight += moving_weight
+            if (self.moving_weight > MINWEIGHT) & (self.moving_weight < MAXWEIGHT):
+                  self.moving_weight += float(moving_data)
 
-            return str(company_weight) + str(four_weight) + str(profit_weight) + str(twitter_weight) + str(moving_weight) 
+            return str(self.company_weight) + " " + str(self.four_weight) + " " + str(self.profit_weight) + " " + str(self.twitter_weight) + " " + str(self.moving_weight) 

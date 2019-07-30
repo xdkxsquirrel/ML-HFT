@@ -17,6 +17,9 @@ class Stock():
             self.price = 0
             self.week52Low = 0
             self.mla = FPGA.MLA()
+            self.currentQtr = 0
+            self.twoQtrAgo = 0
+            self.threeQtrAgo = 0
 
       def get_stock_data(self):
             url = "https://cloud.iexapis.com/beta/stock/" + self.symbol + "/quote?token=" + config.IEX_api_secret_key
@@ -102,7 +105,21 @@ def sell_all_shares():
       except:
             print("!!Finding Open Orders Failed")
       try:
-            pass
+            url = "https://paper-api.alpaca.markets/v2/positions"
+            headers = {'content-type': "application/json", 'apca-api-secret-key': config.alpaca_api_secret_key, 'apca-api-key-id': config.alpaca_api_key_id}
+            response = requests.request("GET", url, data=None, headers=headers, params=None)
+            positions = response.json()
+            for position in positions:
+                  kind = "market"
+                  time_in_force = "gtc"
+                  qty = position['qty']
+                  payload = "{\n\t\"symbol\": \"" + position['symbol'] + "\",\n\t\"qty\": " + qty +\
+                                          ",\n\t\"side\": \"sell\",\n\t\"type\": \"" + kind +\
+                                          "\",\n\t\"time_in_force\": \"" + time_in_force + "\"\n}"
+                  querystring = {"status":"all","direction":"desc"}
+                  url = "https://paper-api.alpaca.markets/v2/orders"
+                  headers = {'content-type': "application/json", 'apca-api-secret-key': config.alpaca_api_secret_key, 'apca-api-key-id': config.alpaca_api_key_id}
+                  response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
       except:
             print("!!Failed Selling all shares")
 
@@ -131,8 +148,9 @@ def main():
                         stock.mla.four_data = temp.get_four_candle_hammer()
 
                         # Get Profit and Loss 
-                        temp = Profitloss()
-                        stock.mla.profit_data = temp.get_profit_loss(stock.symbol)
+                        if new_day:
+                              temp = Profitloss()
+                              stock.mla.profit_data = temp.get_profit_loss(stock.symbol)
 
                         # Get Twitter Sentiment
                         temp = Twitter()
@@ -146,30 +164,37 @@ def main():
                         buy = stock.mla.decide_trade()
 
                         print("     Buying Recomendataions from MLA")#################################
-                        try:
-                              while have_open_orders():
-                                    print("  Currently have open orders")
-                                    time.sleep(120)
-                        except:
-                              print("!!Finding Open Orders Failed")
                         if buy:
+                              try:
+                                    while have_open_orders():
+                                          print("  Currently have open orders")
+                                          time.sleep(120)
+                              except:
+                                    print("!!Finding Open Orders Failed")
+
                               stock.buy()
                               purchases.append({ "Stock" : stock, "Price" : stock.price, "News" : stock.mla.company_data, "Candles" : stock.mla.four_data, "P&L" : stock.mla.profit_data, "Twitter" : stock.mla.twitter_data, "Moving" : stock.mla.moving_data})
                               print("     Bought " + stock.name)
                         else: 
                               print("     Did Not Buy " + stock.name)
+                        print()      
                               
-                  # Delay for 1 minute
-                  time.sleep(60)
+                  # Delay for 5 minutes
+                  time.sleep(300)
 
                   print("     Adjusting MLA Weights")#############################################
                   for purchase in purchases:
                         try:
                               response = purchase["Stock"].get_stock_data()
                               current_price = float(response['latestPrice'])
-                              if current_price > purchase["Price"]:
+                              if current_price > float(purchase["Price"]):
                                     print("   " + purchase["Stock"].mla.learn(purchase["News"], purchase["Candles"], purchase["P&L"], purchase["Twitter"], purchase["Moving"]))
                               else:
+                                    news = 0
+                                    candles = 0
+                                    twitter = 0
+                                    moving = 0
+                                    pandl = 0
                                     if  purchase["News"] == 1:
                                           news = -1
                                     if purchase["Candles"] == 1:
@@ -182,13 +207,13 @@ def main():
                                           moving = -1
                                     print("   " + purchase["Stock"].mla.learn(news, candles, pandl, twitter, moving))
 
-                        except:
+                        except Exception as e:
+                              print(e)
                               print("!!Failure Adjusting Weights for " + purchase["Stock"].name)
 
                   print("     Selling All Stocks Previously Purchased")#################################
                   sell_all_shares()
                   purchases = list()
-                  exit()
                   time.sleep(60)
                   new_day = False
                   
@@ -198,27 +223,4 @@ def main():
             time.sleep(900)
             new_day = True
 
-#main()
-'''
-tesla = Stock("TSLA", "Tesla")
-temp = Company()
-tesla.mla.company_data = temp.get_news_sentiment(20, tesla.name)
-'''
-stocks = init_stocks()
-for stock in stocks:
-      temp = Company()
-      stock.mla.company_data = temp.get_news_sentiment(20, stock.name)
-      print(stock.mla.company_data)
-      print()
-
-
-
-
-
-
-
-
-
-
-
-
+main()
