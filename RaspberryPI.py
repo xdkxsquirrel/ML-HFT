@@ -188,6 +188,7 @@ def main():
                               response = purchase["Stock"].get_stock_data()
                               current_price = float(response['latestPrice'])
                               if current_price > float(purchase["Price"]):
+                                    print(" " + str(purchase["News"]) + " " + str(purchase["Candles"]) + " " + str(purchase["P&L"]) + " " + str(purchase["Twitter"]) + " " + str(purchase["Moving"]))
                                     print("   " + purchase["Stock"].mla.learn(purchase["News"], purchase["Candles"], purchase["P&L"], purchase["Twitter"], purchase["Moving"]))
                               else:
                                     news = 0
@@ -205,6 +206,7 @@ def main():
                                           twitter = -1
                                     if purchase["Moving"] == 1:
                                           moving = -1
+                                    print(" " + str(news) + " " + str(candles) + " " + str(pandl) + " " + str(twitter) + " " + str(moving))
                                     print("   " + purchase["Stock"].mla.learn(news, candles, pandl, twitter, moving))
 
                         except Exception as e:
@@ -212,6 +214,7 @@ def main():
                               print("!!Failure Adjusting Weights for " + purchase["Stock"].name)
 
                   print("     Selling All Stocks Previously Purchased")#################################
+                  print( )
                   sell_all_shares()
                   purchases = list()
                   time.sleep(60)
