@@ -2,6 +2,7 @@ import time
 import requests
 import config
 import FPGA
+import pandas as pd
 from Strategies.movingaverage import Average
 from Strategies.companydata import Company
 from Strategies.fourcandle import Fourcandle
@@ -11,12 +12,12 @@ from Strategies.twitter import Twitter
 # For Raspberry Pi and Python 3.5.3
 
 class Stock():
-      def __init__(self, symbol, name):
+      def __init__(self, symbol, name, weights):
             self.symbol = symbol
             self.name = name
             self.price = 0
             self.week52Low = 0
-            self.mla = FPGA.MLA()
+            self.mla = FPGA.MLA(weights[0], weights[1], weights[2], weights[3], weights[4])
             self.currentQtr = 0
             self.twoQtrAgo = 0
             self.threeQtrAgo = 0
@@ -66,18 +67,18 @@ class Stock():
             else:
                   print("!!No Positions")
 
-def init_stocks():
-      Tesla = Stock("TSLA", "Telsa")
-      Apple = Stock("AAPL", "Apple")
-      Walmart = Stock("WMT", "Walmart")
-      JNJ = Stock("JNJ", "Johnson & Johnson")
-      Google = Stock("GOOG", "Google")
-      Exxon = Stock("XOM", "Exxon")
-      Microsoft = Stock("MSFT", "Microsoft")
-      GE = Stock("GE", "General Electric")
-      JPMorgan = Stock("JPM", "JPMorgan Chase")
-      IBM = Stock("IBM", "IBM")
-      Amazon = Stock("AMZN", "Amazon")
+def init_stocks(df):
+      Tesla = Stock("TSLA", "Telsa", df.TSLA)
+      Apple = Stock("AAPL", "Apple", df.AAPL)
+      Walmart = Stock("WMT", "Walmart", df.WMT)
+      JNJ = Stock("JNJ", "Johnson & Johnson", df.JNJ)
+      Google = Stock("GOOG", "Google", df.GOOG)
+      Exxon = Stock("XOM", "Exxon", df.XOM)
+      Microsoft = Stock("MSFT", "Microsoft", df.MSFT)
+      GE = Stock("GE", "General Electric", df.GE)
+      JPMorgan = Stock("JPM", "JPMorgan Chase", df.JPM)
+      IBM = Stock("IBM", "IBM", df.IBM)
+      Amazon = Stock("AMZN", "Amazon", df.AMZN)
       return [Tesla, Apple, Walmart, JNJ, Google, Exxon, Microsoft, GE, JPMorgan, IBM, Amazon]
 
 def markets_are_open():
@@ -124,9 +125,11 @@ def sell_all_shares():
             print("!!Failed Selling all shares")
 
 def main():
+      df = pd.read_csv("Weights.csv")
+      df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
       new_day = True
       purchases = list()
-      stocks = init_stocks()
+      stocks = init_stocks(df)
       while(1):
             while markets_are_open():
                   for stock in stocks:
@@ -207,11 +210,20 @@ def main():
                                     if purchase["Moving"] == 1:
                                           moving = -1
                                     print(" " + str(news) + " " + str(candles) + " " + str(pandl) + " " + str(twitter) + " " + str(moving))
-                                    print("   " + purchase["Stock"].mla.learn(news, candles, pandl, twitter, moving))
+                                    
+                                    cw, fw, pw, tw, mw = purchase["Stock"].mla.learn(news, candles, pandl, twitter, moving)
+                                    print(" " + str(cw) + " " + str(fw) + " " + str(pw) + " " + str(tw) + " " + str(mw))
+                                    data = pd.DataFrame({purchase["Stock"].symbol: [cw, fw, pw, tw, mw]})
+                                    df.update(data)
 
                         except Exception as e:
                               print(e)
                               print("!!Failure Adjusting Weights for " + purchase["Stock"].name)
+
+                  try:
+                        df.to_csv("Weights.csv")
+                  except Exception as e:
+                        print("CSV Write Failed " + e)
 
                   print("     Selling All Stocks Previously Purchased")#################################
                   print( )
@@ -227,3 +239,6 @@ def main():
             new_day = True
 
 main()
+
+
+

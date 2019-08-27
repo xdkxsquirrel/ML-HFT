@@ -2,12 +2,12 @@ MAXWEIGHT = 100.0
 MINWEIGHT = 0.0
 
 class MLA():
-      def __init__(self):
-            self.company_weight = MAXWEIGHT/2
-            self.four_weight = MAXWEIGHT/2
-            self.profit_weight = MAXWEIGHT/2
-            self.twitter_weight = MAXWEIGHT/2
-            self.moving_weight = MAXWEIGHT/2
+      def __init__(self, cw, fw, pw, tw, mw):
+            self.company_weight = cw
+            self.four_weight = fw
+            self.profit_weight = pw
+            self.twitter_weight = tw
+            self.moving_weight = mw
 
             self.company_data = 0
             self.four_data = 0
@@ -41,4 +41,4 @@ class MLA():
             if (self.moving_weight > MINWEIGHT) & (self.moving_weight < MAXWEIGHT):
                   self.moving_weight += float(moving_data)
 
-            return str(self.company_weight) + " " + str(self.four_weight) + " " + str(self.profit_weight) + " " + str(self.twitter_weight) + " " + str(self.moving_weight) 
+            return self.company_weight, self.four_weight, self.profit_weight, self.twitter_weight, self.moving_weight 
