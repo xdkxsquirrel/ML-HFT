@@ -1,8 +1,8 @@
-import time
+import time as tm
 import requests
 import config
 import FPGA
-import pandas as pd
+import datetime as dt
 from Strategies.movingaverage import Average
 from Strategies.companydata import Company
 from Strategies.fourcandle import Fourcandle
@@ -67,18 +67,33 @@ class Stock():
             else:
                   print("!!No Positions")
 
-def init_stocks(df):
-      Tesla = Stock("TSLA", "Telsa", df.TSLA)
-      Apple = Stock("AAPL", "Apple", df.AAPL)
-      Walmart = Stock("WMT", "Walmart", df.WMT)
-      JNJ = Stock("JNJ", "Johnson & Johnson", df.JNJ)
-      Google = Stock("GOOG", "Google", df.GOOG)
-      Exxon = Stock("XOM", "Exxon", df.XOM)
-      Microsoft = Stock("MSFT", "Microsoft", df.MSFT)
-      GE = Stock("GE", "General Electric", df.GE)
-      JPMorgan = Stock("JPM", "JPMorgan Chase", df.JPM)
-      IBM = Stock("IBM", "IBM", df.IBM)
-      Amazon = Stock("AMZN", "Amazon", df.AMZN)
+def get_weights(ticker):
+      try:
+            query = "query{\n  MostRecentWeight(ticker: \"TSLA\") {\n    twitterWeight\n    fourWeight\n    profitWeight\n    companyWeight\n    date\n  }\n}"
+            result = run_query(query)
+            twitterWeight = int(result['data']['MostRecentWeight']['twitterWeight'])
+            movingWeight = 50 #int(result['data']['MostRecentWeight']['movingWeight'])
+            fourWeight = int(result['data']['MostRecentWeight']['fourWeight'])
+            profitWeight = int(result['data']['MostRecentWeight']['profitWeight'])
+            companyWeight = int(result['data']['MostRecentWeight']['companyWeight'])
+            return [companyWeight, fourWeight, profitWeight, twitterWeight, movingWeight]
+      except: 
+            print("!!Failed to load Weights")
+            return None
+
+
+def init_stocks():
+      Tesla = Stock("TSLA", "Telsa", get_weights("TSLA"))
+      Apple = Stock("AAPL", "Apple", get_weights("AAPL"))
+      Walmart = Stock("WMT", "Walmart", get_weights("WMT"))
+      JNJ = Stock("JNJ", "Johnson & Johnson", get_weights("JNJ"))
+      Google = Stock("GOOG", "Google", get_weights("GOOG"))
+      Exxon = Stock("XOM", "Exxon", get_weights("XOM"))
+      Microsoft = Stock("MSFT", "Microsoft", get_weights("MSFT"))
+      GE = Stock("GE", "General Electric", get_weights("GE"))
+      JPMorgan = Stock("JPM", "JPMorgan Chase", get_weights("JPM"))
+      IBM = Stock("IBM", "IBM", get_weights("IBM"))
+      Amazon = Stock("AMZN", "Amazon", get_weights("AMZN"))
       return [Tesla, Apple, Walmart, JNJ, Google, Exxon, Microsoft, GE, JPMorgan, IBM, Amazon]
 
 def markets_are_open():
@@ -102,7 +117,7 @@ def sell_all_shares():
       try:
             while have_open_orders():
                   print("  Currently have open orders")
-                  time.sleep(120)
+                  tm.sleep(120)
       except:
             print("!!Finding Open Orders Failed")
       try:
@@ -124,12 +139,22 @@ def sell_all_shares():
       except:
             print("!!Failed Selling all shares")
 
+
+def run_query(query): 
+      try:
+            request = requests.post('https://seniorprojectu.herokuapp.com/graphql', json={'query': query}, headers=None)
+            if request.status_code == 200:
+                  return request.json()
+            else:
+                  print("!Weights Capture failed to run by returning code of {}. {}".format(request.status_code, query))
+      except: 
+            print("!Weights Capture failed to run by returning code of {}. {}".format(request.status_code, query))
+
 def main():
-      df = pd.read_csv("Weights.csv")
-      df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+      #graphQL_headers = {"Authorization": "Bearer " + config.GraphQL_api_key}
       new_day = True
       purchases = list()
-      stocks = init_stocks(df)
+      stocks = init_stocks()
       while(1):
             while markets_are_open():
                   for stock in stocks:
@@ -141,7 +166,7 @@ def main():
                         except: 
                               print("!!Gather Stock Data Failed for " + stock.name)
 
-                        # Get News Sentiment.
+                        # Get News Sentiment
                         if new_day:
                               temp = Company()
                               stock.mla.company_data = temp.get_news_sentiment(20, stock.name)
@@ -171,7 +196,7 @@ def main():
                               try:
                                     while have_open_orders():
                                           print("  Currently have open orders")
-                                          time.sleep(120)
+                                          tm.sleep(120)
                               except:
                                     print("!!Finding Open Orders Failed")
 
@@ -183,7 +208,7 @@ def main():
                         print()      
                               
                   # Delay for 5 minutes
-                  time.sleep(300)
+                  tm.sleep(300)
 
                   print("     Adjusting MLA Weights")#############################################
                   for purchase in purchases:
@@ -213,32 +238,28 @@ def main():
                                     
                                     cw, fw, pw, tw, mw = purchase["Stock"].mla.learn(news, candles, pandl, twitter, moving)
                                     print(" " + str(cw) + " " + str(fw) + " " + str(pw) + " " + str(tw) + " " + str(mw))
-                                    data = pd.DataFrame({purchase["Stock"].symbol: [cw, fw, pw, tw, mw]})
-                                    df.update(data)
+                                    time = dt.datetime.utcnow()
+                                    query = "mutation { insertWeight(record:{ ticker: \"" + purchase["Stock"].symbol +\
+                                          "\", twitterWeight:" + str(tw) + ", fourWeight:" + str(fw) + ", movingWeigth:" + str(mw) +\
+                                          ", companyWeight:" + str(cw) + ", profitWeight:" + str(pw) + ", date: \"" +\
+                                          time.strftime("%Y-%m-%dT%H:%M:%S.000Z") + "\" }){ record { date } } } "
+                                    result = run_query(query)
 
                         except Exception as e:
                               print(e)
                               print("!!Failure Adjusting Weights for " + purchase["Stock"].name)
 
-                  try:
-                        df.to_csv("Weights.csv")
-                  except Exception as e:
-                        print("CSV Write Failed " + e)
-
                   print("     Selling All Stocks Previously Purchased")#################################
                   print( )
                   sell_all_shares()
                   purchases = list()
-                  time.sleep(60)
+                  tm.sleep(60)
                   new_day = False
                   
             
             print(" Markets are closed")
             # Delay for 15 minutes
-            time.sleep(900)
+            tm.sleep(900)
             new_day = True
 
 main()
-
-
-
