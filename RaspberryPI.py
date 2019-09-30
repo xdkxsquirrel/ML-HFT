@@ -23,15 +23,18 @@ class Stock():
             self.threeQtrAgo = 0
 
       def get_stock_data(self):
-            url = "https://cloud.iexapis.com/beta/stock/" + self.symbol + "/quote?token=" + config.IEX_api_secret_key
-            response = requests.request("GET", url, data=None, headers=None, params=None)
-            return response.json()
+            try:
+                  url = "https://cloud.iexapis.com/beta/stock/" + self.symbol + "/quote?token=" + config.IEX_api_secret_key
+                  response = requests.request("GET", url, data=None, headers=None, params=None)
+                  return response.json()
+            except:
+                  print("Failed getting stock data for " + self.name)
 
       def buy(self):
             try:
                   kind = "market"
                   time_in_force = "gtc"
-                  qty = "1"
+                  qty = "25"
                   payload = "{\n\t\"symbol\": \"" + self.symbol + "\",\n\t\"qty\": " + qty +\
                                     ",\n\t\"side\": \"buy\",\n\t\"type\": \"" + kind +\
                                     "\",\n\t\"time_in_force\": \"" + time_in_force + "\"\n}"
@@ -177,8 +180,8 @@ def main():
 
                         # Get Profit and Loss 
                         if new_day:
-                              temp = Profitloss()
-                              stock.mla.profit_data = temp.get_profit_loss(stock.symbol)
+                              #temp = Profitloss()
+                              stock.mla.profit_data = 0#temp.get_profit_loss(stock.symbol)
 
                         # Get Twitter Sentiment
                         temp = Twitter()
@@ -213,17 +216,14 @@ def main():
                   print("     Adjusting MLA Weights")#############################################
                   for purchase in purchases:
                         try:
+                              news = purchase["News"]
+                              candles = purchase["Candles"]
+                              twitter = purchase["P&L"]
+                              moving = purchase["Twitter"]
+                              pandl = purchase["Moving"]
                               response = purchase["Stock"].get_stock_data()
                               current_price = float(response['latestPrice'])
-                              if current_price > float(purchase["Price"]):
-                                    print(" " + str(purchase["News"]) + " " + str(purchase["Candles"]) + " " + str(purchase["P&L"]) + " " + str(purchase["Twitter"]) + " " + str(purchase["Moving"]))
-                                    print("   " + purchase["Stock"].mla.learn(purchase["News"], purchase["Candles"], purchase["P&L"], purchase["Twitter"], purchase["Moving"]))
-                              else:
-                                    news = 0
-                                    candles = 0
-                                    twitter = 0
-                                    moving = 0
-                                    pandl = 0
+                              if current_price < float(purchase["Price"]):                                    
                                     if  purchase["News"] == 1:
                                           news = -1
                                     if purchase["Candles"] == 1:
@@ -234,16 +234,14 @@ def main():
                                           twitter = -1
                                     if purchase["Moving"] == 1:
                                           moving = -1
-                                    print(" " + str(news) + " " + str(candles) + " " + str(pandl) + " " + str(twitter) + " " + str(moving))
-                                    
-                                    cw, fw, pw, tw, mw = purchase["Stock"].mla.learn(news, candles, pandl, twitter, moving)
-                                    print(" " + str(cw) + " " + str(fw) + " " + str(pw) + " " + str(tw) + " " + str(mw))
-                                    time = dt.datetime.utcnow()
-                                    query = "mutation { insertWeight(record:{ ticker: \"" + purchase["Stock"].symbol +\
-                                          "\", twitterWeight:" + str(tw) + ", fourWeight:" + str(fw) + ", movingWeigth:" + str(mw) +\
-                                          ", companyWeight:" + str(cw) + ", profitWeight:" + str(pw) + ", date: \"" +\
-                                          time.strftime("%Y-%m-%dT%H:%M:%S.000Z") + "\" }){ record { date } } } "
-                                    result = run_query(query)
+                              
+                              cw, fw, pw, tw, mw = purchase["Stock"].mla.learn(news, candles, pandl, twitter, moving)
+                              time = dt.datetime.utcnow()
+                              query = "mutation { insertWeight(record:{ ticker: \"" + str(purchase["Stock"].symbol) +\
+                                    "\", twitterWeight:" + str(tw) + ", fourWeight:" + str(fw) + ", movingWeigth:" + str(mw) +\
+                                    ", companyWeight:" + str(cw) + ", profitWeight:" + str(pw) + ", date: \"" +\
+                                    time.strftime("%Y-%m-%dT%H:%M:%S.000Z") + "\" }){ record { date } } } "
+                              result = run_query(query)
 
                         except Exception as e:
                               print(e)
