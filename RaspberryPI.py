@@ -72,10 +72,10 @@ class Stock():
 
 def get_weights(ticker):
       try:
-            query = "query{\n  MostRecentWeight(ticker: \"TSLA\") {\n    twitterWeight\n    fourWeight\n    profitWeight\n    companyWeight\n    date\n  }\n}"
+            query = "query{\n  MostRecentWeight(ticker: \"" + ticker + "\") {\n    twitterWeight\n    movingWeight\n fourWeight\n    profitWeight\n    companyWeight\n    date\n  }\n}"
             result = run_query(query)
             twitterWeight = int(result['data']['MostRecentWeight']['twitterWeight'])
-            movingWeight = 50 #int(result['data']['MostRecentWeight']['movingWeight'])
+            movingWeight = int(result['data']['MostRecentWeight']['movingWeight'])
             fourWeight = int(result['data']['MostRecentWeight']['fourWeight'])
             profitWeight = int(result['data']['MostRecentWeight']['profitWeight'])
             companyWeight = int(result['data']['MostRecentWeight']['companyWeight'])
@@ -238,7 +238,7 @@ def main():
                               cw, fw, pw, tw, mw = purchase["Stock"].mla.learn(news, candles, pandl, twitter, moving)
                               time = dt.datetime.utcnow()
                               query = "mutation { insertWeight(record:{ ticker: \"" + str(purchase["Stock"].symbol) +\
-                                    "\", twitterWeight:" + str(tw) + ", fourWeight:" + str(fw) + ", movingWeigth:" + str(mw) +\
+                                    "\", twitterWeight:" + str(tw) + ", fourWeight:" + str(fw) + ", movingWeight:" + str(mw) +\
                                     ", companyWeight:" + str(cw) + ", profitWeight:" + str(pw) + ", date: \"" +\
                                     time.strftime("%Y-%m-%dT%H:%M:%S.000Z") + "\" }){ record { date } } } "
                               result = run_query(query)
