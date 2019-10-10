@@ -1,5 +1,5 @@
-alpaca_api_secret_key = "nu3XZr6PZqF7RoktKS4sWrYYJlcUx5hV80nzV126"
-alpaca_api_key_id = "PKK7DQITNPPXY58HVJ2S"
+alpaca_api_secret_key = "dpQjD0JHxR2kME/nZCkHSHXYw9Tw0eWULLW/NxM6"
+alpaca_api_key_id = "PKZDRL5WXD7LJLTZI1PX"
 IEX_api_secret_key = "pk_11551eefe1bf4f0b81121b498c6a7651"
 
 tweepy_consumer_key = "9TxQyYHvAujwVOGNW5Di97lsL"

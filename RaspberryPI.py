@@ -79,6 +79,7 @@ def get_weights(ticker):
             fourWeight = int(result['data']['MostRecentWeight']['fourWeight'])
             profitWeight = int(result['data']['MostRecentWeight']['profitWeight'])
             companyWeight = int(result['data']['MostRecentWeight']['companyWeight'])
+            print("Weights: " + str(twitterWeight) + " " + str(movingWeight) + " " + str(movingWeight))
             return [companyWeight, fourWeight, profitWeight, twitterWeight, movingWeight]
       except: 
             print("!!Failed to load Weights")
@@ -121,6 +122,7 @@ def sell_all_shares():
             while have_open_orders():
                   print("  Currently have open orders")
                   tm.sleep(120)
+
       except:
             print("!!Finding Open Orders Failed")
       try:
