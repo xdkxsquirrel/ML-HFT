@@ -178,7 +178,7 @@ def main():
 
                         # Get Four Candles 
                         temp = Fourcandle()
-                        stock.mla.four_data = temp.get_four_candle_hammer()
+                        stock.mla.four_data = temp.get_four_candle_hammer(stock.symbol)
 
                         # Get Profit and Loss 
                         if new_day:
