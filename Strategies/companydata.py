@@ -36,6 +36,6 @@ class Company(object):
                         return 1
                   else:
                         return 0
-            except:
-                  print("Error in News Sentiment")
+            except Exception as e:
+                  print("Error in News Sentiment: " + str(e))
                   return 0

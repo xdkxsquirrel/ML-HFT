@@ -6,6 +6,7 @@ class Profitloss(object):
             pass
 
       def get_profit_loss(self, symbol):
+            return 1
             try:                  
                   url = "https://cloud.iexapis.com/beta/stock/" + symbol + "/income?period=quarterly&last=3&token=" + config.IEX_api_secret_key
                   response = requests.request("GET", url, data=None, headers=None, params=None)

@@ -79,7 +79,7 @@ def get_weights(ticker):
             fourWeight = int(result['data']['MostRecentWeight']['fourWeight'])
             profitWeight = int(result['data']['MostRecentWeight']['profitWeight'])
             companyWeight = int(result['data']['MostRecentWeight']['companyWeight'])
-            print("Weights: " + str(twitterWeight) + " " + str(movingWeight) + " " + str(movingWeight))
+            print("Weights: " + str(twitterWeight) + " " + str(movingWeight) + " " + str(fourWeight) + " " + str(profitWeight) + " " + str(companyWeight))
             return [companyWeight, fourWeight, profitWeight, twitterWeight, movingWeight]
       except: 
             print("!!Failed to load Weights")
@@ -177,13 +177,18 @@ def main():
                               stock.mla.company_data = temp.get_news_sentiment(20, stock.name)
 
                         # Get Four Candles 
-                        temp = Fourcandle()
-                        stock.mla.four_data = temp.get_four_candle_hammer(stock.symbol)
+                        try:
+                              temp = Fourcandle()
+                              stock.mla.four_data = temp.get_four_candle_hammer(stock.symbol)
+                              print("Four Candle: " + str(stock.mla.four_data))
+
+                        except Exception as e:
+                              print("!!Four Candle Hammer Failed for " + stock.name + " because " + str(e))
 
                         # Get Profit and Loss 
                         if new_day:
-                              #temp = Profitloss()
-                              stock.mla.profit_data = 0#temp.get_profit_loss(stock.symbol)
+                              temp = Profitloss()
+                              stock.mla.profit_data = temp.get_profit_loss(stock.symbol)
 
                         # Get Twitter Sentiment
                         temp = Twitter()
@@ -207,9 +212,9 @@ def main():
 
                               stock.buy()
                               purchases.append({ "Stock" : stock, "Price" : stock.price, "News" : stock.mla.company_data, "Candles" : stock.mla.four_data, "P&L" : stock.mla.profit_data, "Twitter" : stock.mla.twitter_data, "Moving" : stock.mla.moving_data})
-                              print("     Bought " + stock.name)
+                              print("     Bought " + stock.name + " " + str(stock.mla.company_data) + str(stock.mla.four_data) + str(stock.mla.profit_data) + str(stock.mla.twitter_data) + str(stock.mla.moving_data))
                         else: 
-                              print("     Did Not Buy " + stock.name)
+                              print("     Did Not Buy " + stock.name + " " + str(stock.mla.company_data) + str(stock.mla.four_data) + str(stock.mla.profit_data) + str(stock.mla.twitter_data) + str(stock.mla.moving_data))
                         print()      
                               
                   # Delay for 5 minutes
