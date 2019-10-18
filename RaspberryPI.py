@@ -34,7 +34,7 @@ class Stock():
             try:
                   kind = "market"
                   time_in_force = "gtc"
-                  qty = "25"
+                  qty = "15"
                   payload = "{\n\t\"symbol\": \"" + self.symbol + "\",\n\t\"qty\": " + qty +\
                                     ",\n\t\"side\": \"buy\",\n\t\"type\": \"" + kind +\
                                     "\",\n\t\"time_in_force\": \"" + time_in_force + "\"\n}"
