@@ -1,9 +1,15 @@
+import datetime
+import requests
 import numpy as np
 import re
 import config
 import tweepy
 from tweepy import OAuthHandler
 from textblob import TextBlob
+
+ #Constants
+Current_Company = " "
+cleaned_tweet =""
 
 class TwitterClient(object):
 
@@ -21,7 +27,7 @@ class TwitterClient(object):
             self.api = tweepy.API(self.auth)
 
         except:
-            print("Error: Authentication Failed")
+            print("Error: Twitter Authentication Failed")
 
     def clean_tweet(self, tweet):
         return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t]) |(\w+:\/\/\S+)", " ", tweet).split())
@@ -29,7 +35,9 @@ class TwitterClient(object):
     def get_tweet_sentiment(self, tweet):
 
         # create TextBlob object of passed tweet text
-        analysis = TextBlob(self.clean_tweet(tweet))
+        cleaned_tweet = self.clean_tweet(tweet)
+        analysis = TextBlob(cleaned_tweet)
+
         # set sentiment
         if analysis.sentiment.polarity > 0:
             return 'positive'
@@ -76,19 +84,42 @@ class TwitterClient(object):
 
 class Twitter(object):
 
-      def __init__(self):
+    def Get_Stocks(self):
+        return ["Tesla", "Apple", "Walmart", "JNJ", "Google", "Exxon", "Microsoft", "GE", "JPMorgan", "IBM", "Amazon"]
+
+    def __init__(self):
             pass
 
-      def  get_twitter_sentiment(self, name):
-            api = TwitterClient()
-            # Get 100 tweets of "__"
+    def get_twitter_sentiment(self):
+        api = TwitterClient()
+
+        #get all names for the company data
+        CompanyNames = self.Get_Stocks()
+        for name in CompanyNames:
+            # Get 100 tweets of "name"
             tweets = api.get_tweets(query=name, count=100)
             # positive tweets
             ptweets = [tweet for tweet in tweets if tweet['sentiment'] == 'positive']
             positive = 100 * len(ptweets) / len(tweets)
             if positive > 50:
-                  return 1
+                  SentValue = 1
             else:
-                  return 0
+                  SentValue = 0
+
+            now = datetime.datetime.now()
+            date = now.strftime("%Y-%m-%d") + "T00:00:00.000Z"
+            payload = 'Payload{insertTweet(record: {'+cleaned_tweet+', rating:' + SentValue +'' \
+                'date: '+date+',company: '+name+'})}'
+
+            request = requests.post(
+                'https://seniorprojectu.herokuapp.com/graphql', json={'query': payload})
+            if request.status_code != 200:
+                raise Exception("Query failed to run by returning code of {}. {}".format(
+                    request.status_code, payload))
+
+
+
+
+
 
 
