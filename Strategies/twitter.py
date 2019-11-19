@@ -27,12 +27,14 @@ class TwitterClient(object):
             self.api = tweepy.API(self.auth)
 
         except:
-            print("Error: Twitter Authentication Failed")
+            print("Error: Twitter Sign In Failed")
 
-    def clean_tweet(self, tweet):
+    def regex(self, tweet):
         return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t]) |(\w+:\/\/\S+)", " ", tweet).split())
 
-    def get_tweet_sentiment(self, tweet):
+    def run_sentiment_analysis(self, tweet):
+
+        analysis = TextBlob(self.regex(tweet))
 
         # create TextBlob object of passed tweet text
         cleaned_tweet = self.clean_tweet(tweet)
@@ -41,10 +43,8 @@ class TwitterClient(object):
         # set sentiment
         if analysis.sentiment.polarity > 0:
             return 'positive'
-        elif analysis.sentiment.polarity == 0:
-            return 'neutral'
         else:
-            return 'negative'
+            return 'null'
 
     def get_tweets(self, query, count):
 
@@ -56,23 +56,17 @@ class TwitterClient(object):
 
             # parsing tweets one by one
             for tweet in fetched_tweets:
-                # empty dictionary to store required params of a tweet
-                parsed_tweet = {}
+                # This creates an empty directory and then parses the tweets
+                tweet_dir = {'text': tweet.text, 'sentiment': self.run_sentiment_analysis(tweet.text)}
 
-                # saving text of tweet
-                parsed_tweet['text'] = tweet.text
-                # saving sentiment of tweet
-                parsed_tweet['sentiment'] = self.get_tweet_sentiment(tweet.text)
-
-                # append parsed tweet to tweets list
+                # avoid having multiple tweets in our directory
                 if tweet.retweet_count > 0:
-                    # if tweet has retweets, ensure that it is appended only once
-                    if parsed_tweet not in tweets:
-                        tweets.append(parsed_tweet)
+                    if tweet_dir not in tweets:
+                        tweets.append(tweet_dir)
                 else:
-                    tweets.append(parsed_tweet)
+                    tweets.append(tweet_dir)
 
-                    # return parsed tweets
+                    # return tweets
             return tweets
 
         except tweepy.TweepError as e:
@@ -101,8 +95,10 @@ class Twitter(object):
             # positive tweets
             ptweets = [tweet for tweet in tweets if tweet['sentiment'] == 'positive']
             positive = 100 * len(ptweets) / len(tweets)
+            # Get the number of Positive tweets
             if positive > 50:
                   SentValue = 1
+
             else:
                   SentValue = 0
 
