@@ -21,24 +21,21 @@ class TwitterClient(object):
 
         try:
             self.auth = OAuthHandler(consumer_key, consumer_secret)
-
             # set access token and secret
             self.auth.set_access_token(access_token, access_token_secret)
             self.api = tweepy.API(self.auth)
-
         except:
             print("Error: Twitter Sign In Failed")
 
+    # Sanatize the tweet. ie remove all images and #s and other junk
     def regex(self, tweet):
-        return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t]) |(\w+:\/\/\S+)", " ", tweet).split())
+        return ' '.join(re.sub("(@[A-Za-z0-9]+)|", " ", tweet).split())
+
+    def get_analysis(self, tweet):
+        return TextBlob(cleaned_tweet)
 
     def run_sentiment_analysis(self, tweet):
-
-        analysis = TextBlob(self.regex(tweet))
-
-        # create TextBlob object of passed tweet text
-        cleaned_tweet = self.clean_tweet(tweet)
-        analysis = TextBlob(cleaned_tweet)
+        analysis = get_analysis(self.regex(tweet))
 
         # set sentiment
         if analysis.sentiment.polarity > 0:
@@ -59,7 +56,8 @@ class TwitterClient(object):
                 # This creates an empty directory and then parses the tweets
                 tweet_dir = {'text': tweet.text, 'sentiment': self.run_sentiment_analysis(tweet.text)}
 
-                # avoid having multiple tweets in our directory
+                # avoid having multiple same tweets in our directory
+                # since we could save multiple retweets.
                 if tweet.retweet_count > 0:
                     if tweet_dir not in tweets:
                         tweets.append(tweet_dir)
@@ -78,44 +76,53 @@ class TwitterClient(object):
 
 class Twitter(object):
 
-    def Get_Stocks(self):
-        return ["Tesla", "Apple", "Walmart", "JNJ", "Google", "Exxon", "Microsoft", "GE", "JPMorgan", "IBM", "Amazon"]
-
     def __init__(self):
             pass
 
+    # Sanatize the tweet. ie remove all images and #s and other junk
+    def regex(self, tweet):
+        return ' '.join(re.sub("(@[A-Za-z0-9]+)|", " ", tweet).split())
+
+    # these are the universe for the stocks that we are buying/selling thus, these are all we need
+    def Get_Stocks(self):
+        return ["Tesla", "Apple", "Walmart", "JNJ", "Google", "Exxon", "Microsoft", "GE", "JPMorgan", "IBM", "Amazon"]
+
+    # Save the tweet to the database with the name and sentiment value.
+    def Save_To_Database(self, tweet, sentimentValue, name):
+        now = datetime.datetime.now()
+        date = now.strftime("%Y-%m-%d") + "T00:00:00.000Z"
+        payload = 'Payload{insertTweet(record: {' + self.regex(tweet) + ', rating:' + sentimentValue + '' \
+                  'date: ' + date + ',company: ' + name + '})}'
+        request = requests.post(
+            'https://seniorprojectu.herokuapp.com/graphql', json={'payload': payload})
+        if request.status_code != 200:
+            raise Exception("Query failed to run by returning code of {}. {}".format(
+                request.status_code, payload))
+
+    # this is the main method the twitter analysis.
     def get_twitter_sentiment(self):
         api = TwitterClient()
-
-        #get all names for the company data
+        # get all names for the company data
         CompanyNames = self.Get_Stocks()
+
+        # Loop through each company name
         for name in CompanyNames:
             # Get 100 tweets of "name"
             tweets = api.get_tweets(query=name, count=100)
-            # positive tweets
-            ptweets = [tweet for tweet in tweets if tweet['sentiment'] == 'positive']
-            positive = 100 * len(ptweets) / len(tweets)
+            # Save the positive tweets
+            for tweet in tweets:
+                if tweet['sentiment'] == 'positive':
+                    positive_tweets = tweet
+
+            # Find the percentage of positive tweets using the length of the arrays of tweets
+            positive = 100 * len(positive_tweets) / len(tweets)
             # Get the number of Positive tweets
             if positive > 50:
-                  SentValue = 1
-
+                  sentimentValue = 1
             else:
-                  SentValue = 0
+                  sentimentValue = 0
+            #
+            for tweet in tweets:
+                self.Save_To_Database(tweet, tweet['sentiment'], name)
 
-            now = datetime.datetime.now()
-            date = now.strftime("%Y-%m-%d") + "T00:00:00.000Z"
-            payload = 'Payload{insertTweet(record: {'+cleaned_tweet+', rating:' + SentValue +'' \
-                'date: '+date+',company: '+name+'})}'
-
-            request = requests.post(
-                'https://seniorprojectu.herokuapp.com/graphql', json={'query': payload})
-            if request.status_code != 200:
-                raise Exception("Query failed to run by returning code of {}. {}".format(
-                    request.status_code, payload))
-
-
-
-
-
-
-
+            # we need to bable to save to the database just company sentiment and all the tweets
