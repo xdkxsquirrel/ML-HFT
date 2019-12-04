@@ -49,7 +49,9 @@ class TwitterClient(object):
                 request.status_code, query))
 
     def regex(self, tweet):
-        return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t]) |(\w+:\/\/\S+)", " ", tweet).split())
+        printable= set(tweet.printable())
+        return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t]) |(\w+:\/\/\S+)", " ", tweet)
+                        .split()).encode("ascii", errors="ignore").decode()
 
     def run_sentiment_analysis(self, tweet, name):
         cleanedTweet = self.regex(tweet)
